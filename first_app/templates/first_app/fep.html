@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>FEP</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "css/style.css" %}"/>
+  </head>
+  <body>
+      <div class="container">
+          <div class="jumbotron">
+              <h1>Frequency Error and Power Test Page</h1>
+              <div class="container">
+                <form method="post" class="input_form">
+                  {{form.as_p}}
+                  {% csrf_token %}
+                  <input type="submit" class="btn btn-primary" value="Submit">
+                </form>
+
+
+              </div>
+          </div>
+
+          <table class="table table-striped table-dark">
+              <thead>
+                  <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Frequency Error(Hz)</th>
+                      <th scope="col">Frequency Error Limit(Hz)</th>
+                      <th scope="col">Frequency Error Margin(Hz)</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <th scope="row">1</th>
+                      <td>{{ F }}</td>
+                      <td>{{ F_limit }}</td>
+                      <td>{{ F_margin }}</td>
+                  </tr>
+              </tbody>
+          </table>
+          <table class="table table-striped table-dark">
+              <thead>
+                  <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Power(dBm)</th>
+                      <th scope="col">Power Limit(dBm)</th>
+                      <th scope="col">Power Margin(dB)</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <th scope="row">1</th>
+                      <td>{{ P }}</td>
+                      <td>{{ P_limit }}</td>
+                      <td>{{ P_margin }}</td>
+                  </tr>
+              </tbody>
+          </table>
+          <img src="{% static "result_images/FEP_freq_MHz.png" %}" alt="pic not found." class="img-thumbnail">
+
+      </div>
+  </body>
+</html>
