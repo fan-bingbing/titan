@@ -9,17 +9,35 @@
   </head>
   <body>
     <div class="container">
+
       <div class="jumbotron">
         <img src="{% static "images/GME.png" %}" alt="pic not found.">
-        <!-- <h1>GME!</h1> -->
-        <h2>Go to /fep to start test</h2>
-        <button type="button" class="btn btn-dark">Go</button>
-
-
-
+        <h2>Search Equipment...</h2>
+        <input method="post" type="submit" class="btn btn-primary" value="Go">
       </div>
+      {% for eq in equips %}
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <div class="input-group-text">
+            <input type="checkbox" aria-label="Checkbox for following text input">
+          </div>
+        </div>
+        <input type="text" aria-label="First name" class="form-control" value={{ eq.resadd }}>
+        <input type="text" aria-label="Last name" class="form-control" value={{ eq.resid }}>
+      </div>
+      {% endfor %}
+
+      <!-- <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <div class="input-group-text">
+            <input type="checkbox" aria-label="Checkbox for following text input">
+          </div>
+        </div>
+        <input type="text" class="form-control" aria-label="Text input with checkbox" value={{ equip1 }}>
+      </div> -->
+
+
+      <a href="fep.html">go to FET test page</a>
     </div>
-
-
   </body>
 </html>
