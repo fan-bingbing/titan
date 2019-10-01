@@ -2,11 +2,11 @@ import pyvisa
 import sys
 import os
 import math
-# import openpyxl
+import openpyxl
 # import pandas as pd
-# from openpyxl import Workbook
-# from openpyxl import load_workbook
-
+from openpyxl import Workbook
+from openpyxl import load_workbook
+import time
 import serial
 import re
 # import config
@@ -14,14 +14,51 @@ import datetime
 from decimal import * # should aviod wildcard import mentioned in PEP08
 getcontext().prec = 10 # set 10 decimal values precision
 # Decimal module import from decimal make sure float numbers addition yeilds correct value
-# import sounddevice as sd
-# import numpy as np
-# import matplotlib.pyplot as plt
-# from scipy.fftpack import fft
-# import subprocess
-# from os import system
-# from subprocess import Popen, PIPE
-from first_app.models import FEP
+import sounddevice as sd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fftpack import fft
+import subprocess
+from os import system
+from subprocess import Popen, PIPE
+from first_app.models import FEP, RES, DEMOD, TXSIG
+
+class SigGen(object):
+
+    def __init__(self, address):
+        self.rm = pyvisa.ResourceManager()
+        self.SG = self.rm.open_resource(address)
+
+    def Set_Timeout(self, ms):
+        self.SG.timeout = ms # useful on CMS for Rx test, pyvisa parameter
+
+    def Lev_AF(self):
+        return self.Level_AF # useful for Max_deviation test
+
+    def Lev_RF(self):
+        return self.Level_RF # useful for Rx test
+
+    def write(self, str):
+        self.SG.write(str)
+
+    def query(self, str):
+        return self.SG.query(str)
+
+    def close(self):
+        self.SG.close()
+
+    def Tx_Setup(self):
+        txsig_list = TXSIG.objects.all()
+        self.Level_AF = txsig_list[1].content
+
+        self.SG.write(f"*RST") # write all paramaters to SigGen
+        self.SG.write("SYST:DISP:UPD ON")
+        #self.SG.write(f":FM:INT:FREQ {Frequency_AF}kHz")
+        self.SG.write(f"LFO:FREQ {txsig_list[0].content}kHz")
+        # self.SG.write(f":OUTP2:VOLT {self.Level_AF}mV")
+        self.SG.write(f"LFO:VOLT {self.Level_AF}mV")
+        # self.SG.write(f":OUTP2 {AF_output_on}")
+        self.SG.write(f"LFO {txsig_list[2].content}")
 
 
 class SpecAn(object):
@@ -38,7 +75,7 @@ class SpecAn(object):
     def close(self):
         self.SP.close()
 
-    def screenshot(self, file_name):
+    def screenshot(self, file_name, folder):
         self.SP.write("HCOP:DEV:LANG PNG") # set file type to .png
         self.SP.write("HCOP:CMAP:DEF4")
         self.SP.write(f"MMEM:NAME \'c:\\temp\\Dev_Screenshot.png\'")
@@ -47,10 +84,10 @@ class SpecAn(object):
 
         file_data = self.SP.query_binary_values(f"MMEM:DATA? \'c:\\temp\\Dev_Screenshot.png\'", datatype='s',)[0] # query binary data and save
         # new_file = open(f"c:\\Temp\\{file_name}.png", "wb")
-        new_file = open(f"c:\\Users\\afan\\Documents\\titan\\static\\result_images\\{file_name}.png", "wb")# open a new file as "binary/write" on PC
+        new_file = open(f"c:\\Users\\afan\\Documents\\titan\\static\\result_images\\{folder}\\{file_name}.png", "wb")# open a new file as "binary/write" on PC
         new_file.write(file_data) # copy data to the file on PC
         new_file.close()
-        print(f"Screenshot saved to PC c:\\Users\\afan\\Documents\\titan\\static\\result_images\\{file_name}.png\n")
+        print(f"Screenshot saved to PC c:\\Users\\afan\\Documents\\titan\\static\\result_images\\{folder}\\{file_name}.png\n")
 
     def FEP_Setup(self, freq):
         fep_list = FEP.objects.all()
@@ -76,16 +113,36 @@ class SpecAn(object):
         self.SP.write(f"CALC:LIM:UPP:STAT {fep_list[17].content}")
         self.SP.write(f"SWE:POIN {fep_list[18].content}")
 
-    def get_FEP_result(self, freq):
+    def get_FEP_result(self, freq, folder):
         self.SP.write("CALC:MARK1:MAX")
         Frequency = self.SP.query("CALC:MARK1:X?")
         Level = float(self.SP.query("CALC:MARK1:Y?"))
         Frequency_error = float(Frequency) - float(self.SP.query("FREQ:CENT?"))
         indication = (self.SP.query("*OPC?")).replace("1","Completed.")
-        self.screenshot('FEP_'+str(freq)+'MHz')
+        self.screenshot('FEP_'+str(freq)+'_MHz', folder)
         return {'F':Frequency_error, 'F_limit':1500, 'F_margin':1500 - abs(Frequency_error),
                 'P':Level, 'P_limit':36.98, 'P_margin':abs(Level - 36.98),
+                'Screenshot': 'FEP_'+str(freq)+'_MHz'
                 }
+
+    def DeMod_Setup(self, freq):
+        demod_list = DEMOD.objects.all()
+
+        self.SP.write(f"*RST") # write all paramaters to SpecAn
+        self.SP.write("SYST:DISP:UPD ON")
+        self.SP.write("ADEM ON")
+        self.SP.write(f"FREQ:CENT {freq}MHz")
+        self.SP.write(f"DISP:TRAC:Y:PDIV {demod_list[1].content}kHz")
+        self.SP.write(f"BAND:DEM {demod_list[2].content}kHz")
+        self.SP.write(f"ADEM:AF:COUP {demod_list[3].content}")
+        #Set AF coupling to AC, the frequency offset is automatically corrected.
+        # i.e. the trace is always symmetric with respect to the zero line
+        self.SP.write(f"DISP:TRAC:Y:RLEV:OFFS {demod_list[6].content}")
+        self.SP.write(f"DISP:TRAC:Y:RLEV {demod_list[4].content}")
+        self.SP.write(f"INP:ATT {demod_list[5].content}")
+        self.SP.write(f"{demod_list[7].content}")
+        self.SP.write(f"ADEM:MTIM {demod_list[8].content}ms")
+        self.SP.write(f"INIT:CONT {demod_list[9].content}")
 
 
 class Radio(object):
@@ -168,10 +225,72 @@ class Radio(object):
         self.ser.close()
         print("Serial session is closed.")
 
+class Excel(object):
+
+    def __init__(self, file_name):
+        self.file = load_workbook(filename = file_name) # load Test_Result.xlsx
+
+    def get_sheet(self, sheet_name):
+        self.sheet = self.file[sheet_name]
+
+    def write(self, row, column, value):
+        self.sheet.cell(row = row, column = column, value = value)
+
+    def clear(self, start_cell, end_cell):
+        for row in self.sheet[start_cell +':'+ end_cell]:# clear certain block of cells in selected sheet
+            for cell in row:
+                cell.value = None
+    def save(self, file_name):
+        self.file.save(file_name)
+
+
+
+def Tx_set_standard_test_condition():
+    Dev_Reading = float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000.0 #get the initial deviation value
+    Level_AF = float(SMB.Lev_AF())# initial Level_AF
+# above code is to find Audio output level
+# satisfying standard condtion (around 1.5kHz deviation)
+    if Dev_Reading < 1.5:
+        while Dev_Reading < 1.47:
+            print(f"current deviation:{Dev_Reading}kHz")
+            Level_AF = Level_AF+1
+            SMB.write(f"LFO:VOLT {Level_AF}mV")
+            FSV.write(f"INIT:CONT ON")
+            time.sleep(1)
+            FSV.write(f"INIT:CONT OFF")
+            time.sleep(1)
+            Dev_Reading = float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000.0
+    else:
+        while Dev_Reading > 1.53:
+            print(f"current deviation:{Dev_Reading}kHz")
+            Level_AF = Level_AF-1
+            SMB.write(f"LFO:VOLT  {Level_AF}mV")
+            FSV.write(f"INIT:CONT ON")
+            time.sleep(1)
+            FSV.write(f"INIT:CONT OFF")
+            time.sleep(1)
+            Dev_Reading = float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000.0
+
+    FSV.write(f"INIT:CONT ON")
+    FSV.query('*OPC?')
+    print(f"Audio level has been set to {Level_AF} mV")
+    return Level_AF
+
+
+
+
+equip_list = RES.objects.all()
+
 try:
-    FSV = SpecAn('TCPIP0::10.0.22.28::inst0::INSTR')
+    FSV = SpecAn(equip_list[0].resadd)
 except BaseException:
     print("FSV is not on.")
+    pass
+
+try:
+    SMB = SigGen(equip_list[1].resadd)
+except BaseException:
+    print("SMB is not on.")
     pass
 
 try:
@@ -179,3 +298,9 @@ try:
 except BaseException:
     print("Specified com port does not exsit.")
     pass
+
+# try:
+#     result = Excel("Test_Result.xlsx")
+# except BaseException:
+#     print("Specified Excel file does not exsit.")
+#     pass

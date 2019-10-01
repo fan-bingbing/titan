@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>MAD</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "css/style.css" %}"/>
+  </head>
+  <body>
+      <div class="container">
+          <div class="jumbotron">
+              <h1>Max Deviation Test Page</h1>
+              <div class="container">
+                <form method="post" class="input_form">
+                  {{form.as_p}}
+                  {% csrf_token %}
+                  <input type="submit" class="btn btn-primary" value="Submit">
+                </form>
+              </div>
+          </div>
+          <table class="table table-striped table-dark">
+              <thead>
+                  <tr>
+                      <th scope="col">Audio Frequency(Hz)</th>
+                      <th scope="col">Audio Level(mV)</th>
+                      <th scope="col">+Peak Deviation(kHz)</th>
+                      <th scope="col">-Peak Deviation(kHz)</th>
+                      <th scope="col">Peak Deviation(kHz)</th>
+                      <th scope="col">Limit(kHz)</th>
+                      <th scope="col">Margin</th>
+                      <th scope="col">Time Stamp</th>
+                  </tr>
+              </thead>
+              <tbody>
+                {% for mad in madouts %}
+                <tr>
+                  <td>{{ mad.audiofreq }}</td>
+                  <td>{{ mad.audiolev}}</td>
+                  <td>{{ mad.pluspeak  }}</td>
+                  <td>{{ mad.minuspeak }}</td>
+                  <td>{{ mad.avepeak}}</td>
+                  <td>{{ mad.limit }}</td>
+                  <td>{{ mad.margin }}</td>
+                  <td>{{ mad.timestamp }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+          </table>
+
+
+      </div>
+  </body>
+</html>
