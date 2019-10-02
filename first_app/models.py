@@ -36,14 +36,14 @@ class TXSIG(models.Model):
 
 class MADOUT(models.Model):
 
-    audiofreq = models.CharField(max_length=200)
-    audiolev = models.FloatField(max_length=200)
-    pluspeak = models.FloatField(max_length=200)
-    minuspeak = models.FloatField(max_length=200)
-    avepeak = models.FloatField(max_length=200)
-    limit = models.FloatField(max_length=200)
-    margin = models.FloatField(max_length=200)
+    audiofreq_Hz = models.CharField(primary_key=True, max_length=200)
+    audiolev_mV = models.FloatField(max_length=200)
+    pluspeak_kHz = models.FloatField(max_length=200)
+    minuspeak_kHz = models.FloatField(max_length=200)
+    avepeak_kHz = models.FloatField(max_length=200)
+    limit_kHz = models.FloatField(max_length=200)
+    margin_kHz = models.FloatField(max_length=200)
     timestamp = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.audiofreq
+        return self.audiofreq_Hz
