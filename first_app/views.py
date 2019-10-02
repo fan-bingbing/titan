@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, MADOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
 import time
 from . import forms
 import first_app.definition as df
@@ -82,9 +82,6 @@ def output(request):
     return render(request, 'first_app/output.html', {'form':form})
 
 
-
-
-
 def fep(request):
     form = forms.INPUTFREQ()
     if request.method == 'POST': # 'post' will not work here
@@ -113,6 +110,59 @@ def fep(request):
             return render(request, 'first_app/fep.html', context=fep_result)
 
     return render(request, 'first_app/fep.html', {'form':form})# always return input form
+
+
+def acp(request):
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            ACPOUT.objects.all().delete()
+            # do something
+            print("VALIDATION SUCCESS!")
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
+            SMB.Tx_Setup()
+            SMB.query('*OPC?')
+            FSV.DeMod_Setup(freq=test_freq)
+            FSV.query('*OPC?')
+            CP50.Set_Freq(freq=test_freq)
+            CP50.Set_Pow("high")
+            CP50.Radio_On()
+            time.sleep(2)
+            FSV.write(f"INIT:CONT OFF")
+
+            df.Tx_set_standard_test_condition()
+
+            FSV.ACP_Setup(freq=test_freq)
+            time.sleep(8)
+            FSV.write(f"DISP:TRAC:MODE VIEW")
+            CP50.Radio_Off()
+            SMB.write("LFO OFF")# turn off audio output at the end of the test
+            FSV.screenshot(file_name='ACP_'+str(test_freq)+'_MHz', folder='acp')
+            ACP = FSV.query("CALC:MARK:FUNC:POW:RES? ACP")
+            ACP_LIST = df.re.findall(r'-?\d+\.\d+', ACP) # -? with or without negative sign, \d+ one or more digit
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            acp_list = ACPOUT.objects.get_or_create(Frequency_MHz=test_freq,
+                                                    CarrierPower_dBm=round(float(ACP_LIST[0]),5),
+                                                    ACPminus_dBc=round(float(ACP_LIST[1]),5),
+                                                    ACPplus_dBc=round(float(ACP_LIST[2]),5),
+                                                    Screenshot_file='ACP_'+str(test_freq)+'_MHz.png',
+                                                    TimeStamp=Timestamp,
+                                                    )[0]
+            indication = (FSV.query("*OPC?")).replace("1","Completed.")
+            print(f"Adjacent Channel Test {indication}")
+            print(ACP_LIST)
+            acp_list = ACPOUT.objects.all()
+            acp_dict = {
+                    'acpouts': acp_list
+                }
+
+            acp_dict.update({'form':form})#joint form and result dictionary
+            return render(request, 'first_app/acp.html', context=acp_dict)
+
+    return render(request, 'first_app/acp.html', {'form':form})# always return input form
+
 
 
 def mad(request):

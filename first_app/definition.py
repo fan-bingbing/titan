@@ -21,7 +21,7 @@ from scipy.fftpack import fft
 import subprocess
 from os import system
 from subprocess import Popen, PIPE
-from first_app.models import FEP, RES, DEMOD, TXSIG
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACP
 
 class SigGen(object):
 
@@ -124,6 +124,31 @@ class SpecAn(object):
                 'P':Level, 'P_limit':36.98, 'P_margin':abs(Level - 36.98),
                 'Screenshot': 'FEP_'+str(freq)+'_MHz'
                 }
+
+    def ACP_Setup(self, freq):
+        acp_list = ACP.objects.all()
+
+        self.SP.write(f"*RST") # write all paramaters to SpecAn
+        self.SP.write("SYST:DISP:UPD ON")
+        self.SP.write("CALC:MARK:FUNC:POW:SEL ACP")
+        self.SP.write(f"FREQ:CENT {freq}MHz")
+        self.SP.write(f"FREQ:SPAN {acp_list[1].content}kHz")
+        self.SP.write(f"BAND {acp_list[2].content}Hz")
+        self.SP.write(f"BAND:VID {acp_list[3].content}Hz")
+        self.SP.write(f"DISP:TRAC:Y:RLEV:OFFS {acp_list[6].content}")
+        self.SP.write(f"DISP:TRAC:Y:RLEV {acp_list[4].content}")
+        self.SP.write(f"INP:ATT {acp_list[5].content}")
+        self.SP.write(f"{acp_list[7].content}")
+        self.SP.write(f"POW:ACH:BWID:CHAN1 {acp_list[8].content}kHz")
+        self.SP.write(f"POW:ACH:BWID:ACH {acp_list[9].content}kHz")
+        self.SP.write(f"POW:ACH:BWID:ALT1 {acp_list[10].content}kHz")
+        self.SP.write(f"POW:ACH:ACP {acp_list[11].content}")
+        self.SP.write(f"POW:ACH:SPAC {acp_list[12].content}kHz")
+        self.SP.write(f"POW:ACH:SPAC:ALT1 {acp_list[13].content}kHz")
+        self.SP.write(f"POW:ACH:MODE {acp_list[14].content}")
+        self.SP.write(f"SWE:COUN {acp_list[15].content}")
+        self.SP.write(f"CALC:MARK:FUNC:POW:MODE WRIT")
+        self.SP.write(f"DISP:TRAC:MODE AVER")
 
     def DeMod_Setup(self, freq):
         demod_list = DEMOD.objects.all()
