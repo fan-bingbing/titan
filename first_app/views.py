@@ -4,8 +4,8 @@ import time
 from . import forms
 import first_app.definition as df
 from first_app.forms import INPUTRES
-
-
+import csv
+from django.http import HttpResponse
 
 try:
     from first_app.definition import FSV
@@ -55,18 +55,33 @@ def index(request):
         'equips': res_list
     }
 
-    print(res_list[0], res_list[1])
-
-    # form = forms.INPUTRES()
-    # if request.method == 'POST': # 'post' will not work here
-    #     form = forms.INPUTRES(request.POST)
-    #     if form.is_valid():
-    #         print("VALIDATION SUCCESS!")
-    #         print("equipment available: " + form.cleaned_data['resadd'])
-    # return render(request, 'first_app/index.html', {'form':form})# always return input form
-
-
     return render(request, 'first_app/index.html', context=res_dict)
+
+def output(request):
+    form = forms.OUTPUTFILE()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.OUTPUTFILE(request.POST)
+        if form.is_valid():
+            #do something
+            filename = form.cleaned_data['output_filename'] + '.csv'
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename={filename}'
+
+            writer = csv.writer(response)
+
+            AF_list = MADOUT.objects.all() # get a audio freq list from MADOUT
+
+            # write MADOUT fields in first row
+            writer.writerow(MADOUT.objects.filter(audiofreq_Hz=100).values().get())
+            # write whole table
+            for item in AF_list:
+                writer.writerow(MADOUT.objects.filter(audiofreq_Hz=item).values_list().get())
+
+            return response
+
+    return render(request, 'first_app/output.html', {'form':form})
+
+
 
 
 
@@ -106,12 +121,12 @@ def mad(request):
     Reading_array1 = df.np.zeros(shape=(13,3)) # empty numpy array for below 3kHz result storage
     Reading_array2 = df.np.zeros(shape=(11,3)) # empty numpy array for above 3kHz result storage
     # RSheet = Get_result_sheet("Test_Result.xlsx", "Max_Dev")
-    MADOUT.objects.all().delete()
 
     form = forms.INPUTFREQ()
     if request.method == 'POST': # 'post' will not work here
         form = forms.INPUTFREQ(request.POST)
         if form.is_valid():
+            MADOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
             print("input frequency: " + str(form.cleaned_data['test_frequency_in_MHz']))
@@ -144,13 +159,13 @@ def mad(request):
                 FSV.write(f"INIT:CONT ON")
                 print(f"Deviation is {Reading_array1[i]}kHz")
                 Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-                mad_list = MADOUT.objects.get_or_create(audiofreq=AF_list1[i],
-                                            audiolev=Level_AF,
-                                            pluspeak=Reading_array1[i][0],
-                                            minuspeak=Reading_array1[i][1],
-                                            avepeak=Reading_array1[i][2],
-                                            limit=2.5,
-                                            margin=round(2.5-abs(Reading_array1[i][2]),5),
+                mad_list = MADOUT.objects.get_or_create(audiofreq_Hz=AF_list1[i],
+                                            audiolev_mV=Level_AF,
+                                            pluspeak_kHz=Reading_array1[i][0],
+                                            minuspeak_kHz=Reading_array1[i][1],
+                                            avepeak_kHz=Reading_array1[i][2],
+                                            limit_kHz=2.5,
+                                            margin_kHz=round(2.5-abs(Reading_array1[i][2]),5),
                                             timestamp=Timestamp
                                             )[0]
             Level_AF = Level_AF/10
@@ -171,13 +186,13 @@ def mad(request):
                 FSV.write(f"INIT:CONT ON")
                 print(f"Deviation is {Reading_array2[i]}kHz")
                 Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-                mad_list = MADOUT.objects.get_or_create(audiofreq=AF_list2[i],
-                                            audiolev=Level_AF,
-                                            pluspeak=Reading_array2[i][0],
-                                            minuspeak=Reading_array2[i][1],
-                                            avepeak=Reading_array2[i][2],
-                                            limit=2.5,
-                                            margin=round(2.5-abs(Reading_array2[i][2]),5),
+                mad_list = MADOUT.objects.get_or_create(audiofreq_Hz=AF_list2[i],
+                                            audiolev_mV=Level_AF,
+                                            pluspeak_kHz=Reading_array2[i][0],
+                                            minuspeak_kHz=Reading_array2[i][1],
+                                            avepeak_kHz=Reading_array2[i][2],
+                                            limit_kHz=2.5,
+                                            margin_kHz=round(2.5-abs(Reading_array2[i][2]),5),
                                             timestamp=Timestamp
                                             )[0]
             CP50.Radio_Off()
@@ -191,6 +206,5 @@ def mad(request):
 
             mad_dict.update({'form':form})#joint form and result dictionary
             return render(request, 'first_app/mad.html', context=mad_dict)
-
 
     return render(request, 'first_app/mad.html', {'form':form})# always return input form

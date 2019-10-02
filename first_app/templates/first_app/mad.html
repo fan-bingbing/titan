@@ -28,27 +28,25 @@
                       <th scope="col">-Peak Deviation(kHz)</th>
                       <th scope="col">Peak Deviation(kHz)</th>
                       <th scope="col">Limit(kHz)</th>
-                      <th scope="col">Margin</th>
+                      <th scope="col">Margin(kHz)</th>
                       <th scope="col">Time Stamp</th>
                   </tr>
               </thead>
               <tbody>
                 {% for mad in madouts %}
                 <tr>
-                  <td>{{ mad.audiofreq }}</td>
-                  <td>{{ mad.audiolev}}</td>
-                  <td>{{ mad.pluspeak  }}</td>
-                  <td>{{ mad.minuspeak }}</td>
-                  <td>{{ mad.avepeak}}</td>
-                  <td>{{ mad.limit }}</td>
-                  <td>{{ mad.margin }}</td>
+                  <td>{{ mad.audiofreq_Hz }}</td>
+                  <td>{{ mad.audiolev_mV}}</td>
+                  <td>{{ mad.pluspeak_kHz  }}</td>
+                  <td>{{ mad.minuspeak_kHz }}</td>
+                  <td>{{ mad.avepeak_kHz}}</td>
+                  <td>{{ mad.limit_kHz }}</td>
+                  <td>{{ mad.margin_kHz }}</td>
                   <td>{{ mad.timestamp }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
           </table>
-
-
       </div>
   </body>
 </html>

@@ -6,4 +6,5 @@ urlpatterns = [
                 path('', views.index, name='index'),
                 path('fep/', views.fep, name='fep'),
                 path('mad/', views.mad, name='mad'),
+                path('output/', views.output, name='output'),
 ]
