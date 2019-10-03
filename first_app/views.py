@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT
 import time
 from . import forms
 import first_app.definition as df
@@ -24,12 +24,6 @@ try:
 except BaseException:
     print("SMB import failed, SMB might be not on")
     pass
-
-# try:
-#     from first_app.forexcel import result
-# except BaseException:
-#     print("result import failed, it might be damaged")
-#     pass
 
 
 # Create your views here.
@@ -81,6 +75,30 @@ def output(request):
 
     return render(request, 'first_app/output.html', {'form':form})
 
+def cs(request):
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            CSEOUT.objects.all().delete()
+            #do something
+            print("VALIDATION SUCCESS!")
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
+            df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1)
+            df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1)
+            df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1)
+            cse_list = CSEOUT.objects.all()
+            cse_dict = {
+                    'cseouts': cse_list
+                }
+
+            cse_dict.update({'form':form})#joint form and result dictionary
+
+            return render(request, 'first_app/cs.html', context=cse_dict)
+
+    return render(request, 'first_app/cs.html', {'form':form})# always return input form
+
 
 def fep(request):
     form = forms.INPUTFREQ()
@@ -89,10 +107,11 @@ def fep(request):
         if form.is_valid():
             #do something
             print("VALIDATION SUCCESS!")
-            print("input frequency: " + str(form.cleaned_data['test_frequency_in_MHz']))
-            FSV.FEP_Setup(freq=form.cleaned_data['test_frequency_in_MHz'])
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
+            FSV.FEP_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=form.cleaned_data['test_frequency_in_MHz'])
+            CP50.Set_Freq(freq=test_freq)
             CP50.Set_Pow("high")
             CP50.Radio_On()
             time.sleep(2)
@@ -100,7 +119,7 @@ def fep(request):
             time.sleep(3)
             FSV.write("DISP:TRAC:MODE VIEW")
             CP50.Radio_Off()
-            fep_result = FSV.get_FEP_result(freq=form.cleaned_data['test_frequency_in_MHz'], folder='fep')
+            fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
             fep_result.update({'form':form})#joint form and result dictionary
 
             print(f"Frequency error:{fep_result['F']}Hz")
@@ -179,12 +198,13 @@ def mad(request):
             MADOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
-            print("input frequency: " + str(form.cleaned_data['test_frequency_in_MHz']))
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
             SMB.Tx_Setup()
             SMB.query('*OPC?')
-            FSV.DeMod_Setup(freq=form.cleaned_data['test_frequency_in_MHz'])
+            FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=form.cleaned_data['test_frequency_in_MHz'])
+            CP50.Set_Freq(freq=test_freq)
             CP50.Set_Pow("high")
             CP50.Radio_On()
             time.sleep(2)

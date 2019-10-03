@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>CS</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "css/style.css" %}"/>
+  </head>
+  <body>
+      <div class="container">
+          <div class="jumbotron">
+              <h1>Conducted Spurious Test Page</h1>
+              <div class="container">
+                <form method="post" class="input_form">
+                  {{form.as_p}}
+                  {% csrf_token %}
+                  <input type="submit" class="btn btn-primary" value="Submit">
+                </form>
+              </div>
+          </div>
+          <table class="table table-striped table-dark">
+              <thead>
+                  <tr>
+                      <th scope="col">SubRange</th>
+                      <th scope="col">CSE1_Frequency(MHz)</th>
+                      <th scope="col">CSE1_Level(dBm)</th>
+                      <th scope="col">CSE2_Frequency(MHz)</th>
+                      <th scope="col">CSE2_Level(dBm)</th>
+                      <th scope="col">Limit(dBm)</th>
+                      <th scope="col">Screenshot_file(png)</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for cse in cseouts %}
+                  <tr>
+                    <td>{{ cse.SubRange }}</td>
+                    <td>{{ cse.CSE1_Frequency_MHz }}</td>
+                    <td>{{ cse.CSE1_Level_dBm }}</td>
+                    <td>{{ cse.CSE2_Frequency_MHz }}</td>
+                    <td>{{ cse.CSE2_Level_dBm }}</td>
+                    <td>{{ cse.limit_dBm }}</td>
+                    <td>{{ cse.Screenshot_file }}</td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+          <script src="{% static "js/hello.js" %}"></script>
+          {% for cse in cseouts %}
+          <img src="{% static "result_images/cs/" %}{{cse.Screenshot_file}}" alt="pic not found." class="img-thumbnail">
+          {% endfor %}
+      </div>
+  </body>
+</html>

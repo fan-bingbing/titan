@@ -17,6 +17,27 @@ class ACP(models.Model):
     def __str__(self):
         return self.parameter
 
+class CSE(models.Model):
+    parameter = models.CharField(max_length=200)
+    content = models.CharField(max_length=200)
+    unit = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.parameter
+
+class CSEOUT(models.Model):
+    SubRange = models.CharField(max_length=200)
+    CSE1_Frequency_MHz = models.FloatField(max_length=200)
+    CSE1_Level_dBm = models.FloatField(max_length=200)
+    CSE2_Frequency_MHz = models.FloatField(max_length=200)
+    CSE2_Level_dBm = models.FloatField(max_length=200)
+    limit_dBm = models.FloatField(max_length=200)
+    Screenshot_file = models.CharField(max_length=200)
+
+
+    def __str__(self):
+        return self.SubRange
+
 class ACPOUT(models.Model):
     Frequency_MHz = models.CharField(max_length=200)
     CarrierPower_dBm = models.FloatField(max_length=200)

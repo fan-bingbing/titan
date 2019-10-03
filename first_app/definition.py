@@ -21,7 +21,7 @@ from scipy.fftpack import fft
 import subprocess
 from os import system
 from subprocess import Popen, PIPE
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACP
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACP, CSE, CSEOUT
 
 class SigGen(object):
 
@@ -124,6 +124,104 @@ class SpecAn(object):
                 'P':Level, 'P_limit':36.98, 'P_margin':abs(Level - 36.98),
                 'Screenshot': 'FEP_'+str(freq)+'_MHz'
                 }
+
+
+
+    def get_CSE_result(self, freq, sub_range):
+        self.SP.write("CALC:MARK1:MAX")
+        self.SP.write("CALC:MARK2:MAX")
+        self.SP.write("CALC:MARK2:MAX:NEXT")
+        Frequency1 = float(self.SP.query("CALC:MARK1:X?"))/1e6
+        Level1 = float(self.SP.query("CALC:MARK1:Y?"))
+
+        Frequency2 = float(self.SP.query("CALC:MARK2:X?"))/1e6
+        Level2 = float(self.SP.query("CALC:MARK2:Y?"))
+
+        cse_list = CSEOUT.objects.get_or_create(SubRange=sub_range,
+                                                CSE1_Frequency_MHz=round(Frequency1,5),
+                                                CSE1_Level_dBm=round(Level1,5),
+                                                CSE2_Frequency_MHz=round(Frequency2,5),
+                                                CSE2_Level_dBm=round(Level2,5),
+                                                limit_dBm= -30,
+                                                Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png'
+                                                )[0]
+        indication = (self.SP.query("*OPC?")).replace("1","Completed.")
+        print(f"CSE Test {indication}")
+        return cse_list
+
+
+    def CSE_Setup(self, sub_range, limit_line):
+
+        if limit_line == 1:
+            CSE.objects.filter(id=16).update(content='OFF')
+            CSE.objects.filter(id=18).update(content='ON')
+            CSE.objects.filter(id=21).update(content='OFF')
+
+        if sub_range == 1:# choose sub_range
+            CSE.objects.filter(id=1).update(content=0.009)
+            CSE.objects.filter(id=2).update(content=0.15)
+            CSE.objects.filter(id=3).update(content=1)
+            CSE.objects.filter(id=4).update(content=3)
+            CSE.objects.filter(id=5).update(content=15)
+            CSE.objects.filter(id=6).update(content=25)
+            CSE.objects.filter(id=7).update(content=3.5)
+            CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=19).update(content=5001)
+
+        elif sub_range == 2:
+            CSE.objects.filter(id=1).update(content=0.15)
+            CSE.objects.filter(id=2).update(content=30)
+            CSE.objects.filter(id=3).update(content=10)
+            CSE.objects.filter(id=4).update(content=30)
+            CSE.objects.filter(id=5).update(content=15)
+            CSE.objects.filter(id=6).update(content=25)
+            CSE.objects.filter(id=7).update(content=3.5)
+            CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=19).update(content=5001)
+
+        elif sub_range == 3:
+            CSE.objects.filter(id=1).update(content=30)
+            CSE.objects.filter(id=2).update(content=700)
+            CSE.objects.filter(id=3).update(content=100)
+            CSE.objects.filter(id=4).update(content=300)
+            CSE.objects.filter(id=5).update(content=43.8)
+            CSE.objects.filter(id=6).update(content=20)
+            CSE.objects.filter(id=7).update(content=33.8)
+            CSE.objects.filter(id=12).update(content='OFF')
+            CSE.objects.filter(id=19).update(content=10001)
+
+        else:
+            pass
+
+        cse_list = CSE.objects.all()
+        self.SP.write(f"*RST") # write all paramaters to SpecAn
+        self.SP.write("SYST:DISP:UPD ON")
+        self.SP.write(f"FREQ:STAR {cse_list[0].content}MHz")
+        self.SP.write(f"FREQ:STOP {cse_list[1].content}MHz")
+        self.SP.write(f"BAND {cse_list[2].content}kHz")
+        self.SP.write(f"BAND:VID {cse_list[3].content}kHz")
+        self.SP.write(f"DISP:TRAC:Y:RLEV:OFFS {cse_list[6].content}")
+        self.SP.write(f"DISP:TRAC:Y:RLEV {cse_list[4].content}")
+        self.SP.write(f"INP:ATT {cse_list[5].content}")
+        self.SP.write(f"{cse_list[6].content}")
+        self.SP.write(f"{cse_list[7].content}")
+        self.SP.write(f"CORR:TRAN:SEL '{cse_list[8].content}'")
+        self.SP.write(f"CORR:TRAN {cse_list[9].content} ")
+        self.SP.write(f"CORR:TRAN:SEL '{cse_list[10].content}'")
+        self.SP.write(f"CORR:TRAN {cse_list[11].content}")
+        self.SP.write(f"CORR:TRAN:SEL '{cse_list[12].content}'")
+        self.SP.write(f"CORR:TRAN {cse_list[13].content}")
+        self.SP.write(f"CALC:LIM:NAME '{cse_list[14].content}'")
+        self.SP.write(f"CALC:LIM:UPP:STAT {cse_list[15].content}")
+        self.SP.write(f"CALC:LIM:NAME '{cse_list[16].content}'")
+        self.SP.write(f"CALC:LIM:UPP:STAT {cse_list[17].content}")
+        self.SP.write(f"SWE:POIN {cse_list[18].content}")
+        self.SP.write(f"CALC:LIM:NAME '{cse_list[19].content}'")
+        self.SP.write(f"CALC:LIM:UPP:STAT {cse_list[20].content}")
+        self.SP.write(f"DISP:TRAC:MODE MAXH")
+
+
+
 
     def ACP_Setup(self, freq):
         acp_list = ACP.objects.all()
@@ -301,6 +399,17 @@ def Tx_set_standard_test_condition():
     print(f"Audio level has been set to {Level_AF} mV")
     return Level_AF
 
+def CSE_operation(freq, sub_range, limit_line):
+    FSV.CSE_Setup(sub_range=sub_range, limit_line=limit_line)
+    FSV.query('*OPC?')
+    CP50.Set_Freq(freq=freq)
+    CP50.Set_Pow("high")
+    CP50.Radio_On()
+    time.sleep(5)
+    FSV.write("DISP:TRAC:MODE VIEW")
+    CP50.Radio_Off()
+    FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
+    FSV.get_CSE_result(freq=freq, sub_range=sub_range)
 
 
 
@@ -323,9 +432,3 @@ try:
 except BaseException:
     print("Specified com port does not exsit.")
     pass
-
-# try:
-#     result = Excel("Test_Result.xlsx")
-# except BaseException:
-#     print("Specified Excel file does not exsit.")
-#     pass

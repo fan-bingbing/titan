@@ -8,4 +8,5 @@ urlpatterns = [
                 path('mad/', views.mad, name='mad'),
                 path('output/', views.output, name='output'),
                 path('acp/', views.acp, name='acp'),
+                path('cs/', views.cs, name='cs'),
 ]
