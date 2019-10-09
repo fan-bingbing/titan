@@ -76,19 +76,20 @@ def output(request):
     return render(request, 'first_app/output.html', {'form':form})
 
 def cs(request):
-    form = forms.INPUTFREQ()
+    form = forms.INPUTCS()
     if request.method == 'POST': # 'post' will not work here
-        form = forms.INPUTFREQ(request.POST)
+        form = forms.INPUTCS(request.POST)
         if form.is_valid():
             CSEOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
+            cutoff_freq = form.cleaned_data['cutoff_frequency_in_MHz']
 
             print("input frequency: " + str(test_freq))
-            df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1)
-            df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1)
-            df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1)
+            df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1, cutoff=cutoff_freq)
+            df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1, cutoff=cutoff_freq)
+            df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1, cutoff=cutoff_freq)
             csl_list = CSEOUT.objects.all()
             csl_dict = {
                     'cslouts': csl_list
@@ -101,18 +102,20 @@ def cs(request):
     return render(request, 'first_app/cs.html', {'form':form})# always return input form
 
 def csh(request):
-    form = forms.INPUTFREQ()
+    form = forms.INPUTCS()
     if request.method == 'POST': # 'post' will not work here
-        form = forms.INPUTFREQ(request.POST)
+        form = forms.INPUTCS(request.POST)
         if form.is_valid():
             CSHOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
+            cutoff_freq = form.cleaned_data['cutoff_frequency_in_MHz']
+            filter = form.cleaned_data['high_pass_filter']
 
             print("input frequency: " + str(test_freq))
-            df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1)
-            df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1)
+            df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1, cutoff=cutoff_freq, filter=filter)
+            df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1, cutoff=cutoff_freq, filter=filter)
 
             csh_list = CSHOUT.objects.all()
             csh_dict = {
@@ -149,7 +152,6 @@ def fep(request):
             CP50.Radio_Off()
             fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
             fep_result.update({'form':form})#joint form and result dictionary
-
 
             print(f"Frequency error:{fep_result['F']}Hz")
             print(f"Carrier power:{fep_result['P']}dBm")

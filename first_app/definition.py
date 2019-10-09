@@ -164,7 +164,7 @@ class SpecAn(object):
         return cse_list
 
 
-    def CSE_Setup(self, sub_range, limit_line):
+    def CSE_Setup(self, sub_range, limit_line, cutoff, filter):
 
         if limit_line == 1:
             CSE.objects.filter(id=16).update(content='OFF')
@@ -201,11 +201,11 @@ class SpecAn(object):
 
         elif sub_range == 3:
             CSE.objects.filter(id=1).update(content=30)
-            CSE.objects.filter(id=2).update(content=700)
+            CSE.objects.filter(id=2).update(content=cutoff)
             CSE.objects.filter(id=3).update(content=100)
             CSE.objects.filter(id=4).update(content=300)
-            CSE.objects.filter(id=5).update(content=43.8)
-            CSE.objects.filter(id=6).update(content=20)
+            CSE.objects.filter(id=5).update(content=50)
+            CSE.objects.filter(id=6).update(content=25)
             CSE.objects.filter(id=7).update(content=33.8)
             CSE.objects.filter(id=10).update(content='ON')
             CSE.objects.filter(id=12).update(content='OFF')
@@ -214,7 +214,7 @@ class SpecAn(object):
 
 
         elif sub_range == 4:
-            CSE.objects.filter(id=1).update(content=700)
+            CSE.objects.filter(id=1).update(content=cutoff)
             CSE.objects.filter(id=2).update(content=1000)
             CSE.objects.filter(id=3).update(content=100)
             CSE.objects.filter(id=4).update(content=300)
@@ -223,6 +223,7 @@ class SpecAn(object):
             CSE.objects.filter(id=7).update(content=3.5)
             CSE.objects.filter(id=10).update(content='ON')
             CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=13).update(content=filter)
             CSE.objects.filter(id=14).update(content='ON')
             CSE.objects.filter(id=19).update(content=20001)
 
@@ -237,6 +238,7 @@ class SpecAn(object):
             CSE.objects.filter(id=7).update(content=3.5)
             CSE.objects.filter(id=10).update(content='ON')
             CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=13).update(content=filter)
             CSE.objects.filter(id=14).update(content='ON')
             CSE.objects.filter(id=19).update(content=30001)
 
@@ -452,8 +454,8 @@ def Tx_set_standard_test_condition():
     print(f"Audio level has been set to {Level_AF} mV")
     return Level_AF
 
-def CSE_operation(freq, sub_range, limit_line):
-    FSV.CSE_Setup(sub_range=sub_range, limit_line=limit_line)
+def CSE_operation(freq, sub_range, limit_line, cutoff, filter='NA'):
+    FSV.CSE_Setup(sub_range=sub_range, limit_line=limit_line, cutoff=cutoff, filter=filter)
     FSV.query('*OPC?')
     CP50.Set_Freq(freq=freq+0.0125)
     CP50.Set_Pow("high")
@@ -475,7 +477,7 @@ except BaseException:
     pass
 
 try:
-    SMB = SigGen(equip_list[1].resadd)
+    SMB = SigGen(equip_list[2].resadd)
 except BaseException:
     print("SMB is not on.")
     pass
