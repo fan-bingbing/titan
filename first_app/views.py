@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT, CSHOUT
 import time
 from . import forms
 import first_app.definition as df
@@ -84,20 +84,46 @@ def cs(request):
             #do something
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
+
             print("input frequency: " + str(test_freq))
             df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1)
             df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1)
             df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1)
-            cse_list = CSEOUT.objects.all()
-            cse_dict = {
-                    'cseouts': cse_list
+            csl_list = CSEOUT.objects.all()
+            csl_dict = {
+                    'cslouts': csl_list
                 }
 
-            cse_dict.update({'form':form})#joint form and result dictionary
+            csl_dict.update({'form':form})#joint form and result dictionary
 
-            return render(request, 'first_app/cs.html', context=cse_dict)
+            return render(request, 'first_app/cs.html', context=csl_dict)
 
     return render(request, 'first_app/cs.html', {'form':form})# always return input form
+
+def csh(request):
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            CSHOUT.objects.all().delete()
+            #do something
+            print("VALIDATION SUCCESS!")
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+
+            print("input frequency: " + str(test_freq))
+            df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1)
+            df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1)
+
+            csh_list = CSHOUT.objects.all()
+            csh_dict = {
+                    'cshouts': csh_list
+                }
+
+            csh_dict.update({'form':form})#joint form and result dictionary
+
+            return render(request, 'first_app/csh.html', context=csh_dict)
+
+    return render(request, 'first_app/csh.html', {'form':form})# always return input form
 
 
 def fep(request):
@@ -108,10 +134,12 @@ def fep(request):
             #do something
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
+
             print("input frequency: " + str(test_freq))
             FSV.FEP_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=test_freq)
+            CP50.Set_Freq(freq=test_freq+0.0125)
+            # adding 0.0125MHz makes absolutely no sense but fixed problem...
             CP50.Set_Pow("high")
             CP50.Radio_On()
             time.sleep(2)
@@ -121,6 +149,7 @@ def fep(request):
             CP50.Radio_Off()
             fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
             fep_result.update({'form':form})#joint form and result dictionary
+
 
             print(f"Frequency error:{fep_result['F']}Hz")
             print(f"Carrier power:{fep_result['P']}dBm")
@@ -145,7 +174,7 @@ def acp(request):
             SMB.query('*OPC?')
             FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=test_freq)
+            CP50.Set_Freq(freq=test_freq+0.0125)
             CP50.Set_Pow("high")
             CP50.Radio_On()
             time.sleep(2)
@@ -204,7 +233,7 @@ def mad(request):
             SMB.query('*OPC?')
             FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=test_freq)
+            CP50.Set_Freq(freq=test_freq+0.0125)
             CP50.Set_Pow("high")
             CP50.Radio_On()
             time.sleep(2)

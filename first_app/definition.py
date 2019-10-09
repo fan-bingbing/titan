@@ -12,7 +12,9 @@ import re
 # import config
 import datetime
 from decimal import * # should aviod wildcard import mentioned in PEP08
+
 getcontext().prec = 10 # set 10 decimal values precision
+
 # Decimal module import from decimal make sure float numbers addition yeilds correct value
 import sounddevice as sd
 import numpy as np
@@ -21,7 +23,7 @@ from scipy.fftpack import fft
 import subprocess
 from os import system
 from subprocess import Popen, PIPE
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACP, CSE, CSEOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACP, CSE, CSEOUT, CSHOUT
 
 class SigGen(object):
 
@@ -126,7 +128,6 @@ class SpecAn(object):
                 }
 
 
-
     def get_CSE_result(self, freq, sub_range):
         self.SP.write("CALC:MARK1:MAX")
         self.SP.write("CALC:MARK2:MAX")
@@ -137,16 +138,29 @@ class SpecAn(object):
         Frequency2 = float(self.SP.query("CALC:MARK2:X?"))/1e6
         Level2 = float(self.SP.query("CALC:MARK2:Y?"))
 
-        cse_list = CSEOUT.objects.get_or_create(SubRange=sub_range,
-                                                CSE1_Frequency_MHz=round(Frequency1,5),
-                                                CSE1_Level_dBm=round(Level1,5),
-                                                CSE2_Frequency_MHz=round(Frequency2,5),
-                                                CSE2_Level_dBm=round(Level2,5),
-                                                limit_dBm= -30,
-                                                Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png'
-                                                )[0]
-        indication = (self.SP.query("*OPC?")).replace("1","Completed.")
-        print(f"CSE Test {indication}")
+        if sub_range <= 3:
+            cse_list = CSEOUT.objects.get_or_create(SubRange=sub_range,
+                                                    CSE1_Frequency_MHz=round(Frequency1,5),
+                                                    CSE1_Level_dBm=round(Level1,5),
+                                                    CSE2_Frequency_MHz=round(Frequency2,5),
+                                                    CSE2_Level_dBm=round(Level2,5),
+                                                    limit_dBm= -30,
+                                                    Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png'
+                                                    )[0]
+            indication = (self.SP.query("*OPC?")).replace("1","Completed.")
+            print(f"CSE Test {indication}")
+        else:
+            cse_list = CSHOUT.objects.get_or_create(SubRange=sub_range,
+                                                    CSE1_Frequency_MHz=round(Frequency1,5),
+                                                    CSE1_Level_dBm=round(Level1,5),
+                                                    CSE2_Frequency_MHz=round(Frequency2,5),
+                                                    CSE2_Level_dBm=round(Level2,5),
+                                                    limit_dBm= -30,
+                                                    Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png'
+                                                    )[0]
+            indication = (self.SP.query("*OPC?")).replace("1","Completed.")
+            print(f"CSE Test {indication}")
+
         return cse_list
 
 
@@ -165,8 +179,11 @@ class SpecAn(object):
             CSE.objects.filter(id=5).update(content=15)
             CSE.objects.filter(id=6).update(content=25)
             CSE.objects.filter(id=7).update(content=3.5)
+            CSE.objects.filter(id=10).update(content='ON')
             CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=14).update(content='OFF')
             CSE.objects.filter(id=19).update(content=5001)
+
 
         elif sub_range == 2:
             CSE.objects.filter(id=1).update(content=0.15)
@@ -176,8 +193,11 @@ class SpecAn(object):
             CSE.objects.filter(id=5).update(content=15)
             CSE.objects.filter(id=6).update(content=25)
             CSE.objects.filter(id=7).update(content=3.5)
+            CSE.objects.filter(id=10).update(content='ON')
             CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=14).update(content='OFF')
             CSE.objects.filter(id=19).update(content=5001)
+
 
         elif sub_range == 3:
             CSE.objects.filter(id=1).update(content=30)
@@ -187,8 +207,39 @@ class SpecAn(object):
             CSE.objects.filter(id=5).update(content=43.8)
             CSE.objects.filter(id=6).update(content=20)
             CSE.objects.filter(id=7).update(content=33.8)
+            CSE.objects.filter(id=10).update(content='ON')
             CSE.objects.filter(id=12).update(content='OFF')
+            CSE.objects.filter(id=14).update(content='OFF')
             CSE.objects.filter(id=19).update(content=10001)
+
+
+        elif sub_range == 4:
+            CSE.objects.filter(id=1).update(content=700)
+            CSE.objects.filter(id=2).update(content=1000)
+            CSE.objects.filter(id=3).update(content=100)
+            CSE.objects.filter(id=4).update(content=300)
+            CSE.objects.filter(id=5).update(content=0)
+            CSE.objects.filter(id=6).update(content=10)
+            CSE.objects.filter(id=7).update(content=3.5)
+            CSE.objects.filter(id=10).update(content='ON')
+            CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=14).update(content='ON')
+            CSE.objects.filter(id=19).update(content=20001)
+
+
+        elif sub_range == 5:
+            CSE.objects.filter(id=1).update(content=1000)
+            CSE.objects.filter(id=2).update(content=4000)
+            CSE.objects.filter(id=3).update(content=1000)
+            CSE.objects.filter(id=4).update(content=3000)
+            CSE.objects.filter(id=5).update(content=-10)
+            CSE.objects.filter(id=6).update(content=5)
+            CSE.objects.filter(id=7).update(content=3.5)
+            CSE.objects.filter(id=10).update(content='ON')
+            CSE.objects.filter(id=12).update(content='ON')
+            CSE.objects.filter(id=14).update(content='ON')
+            CSE.objects.filter(id=19).update(content=30001)
+
 
         else:
             pass
@@ -269,7 +320,7 @@ class SpecAn(object):
 
 
 class Radio(object):
-    def __init__(self, com):
+    def __init__(self, com, baudrate):
         self.ESC_CHAR = 0x7D # Escape char
         self.STX_CHAR =  0x7E # Start of packet
         self.ETX_CHAR = 0x7F # End of packet
@@ -286,7 +337,7 @@ class Radio(object):
         self.payload8 = bytearray(b'\xA6\x00') # PTT off
 
         self.port = com
-        self.baudrate = 115200
+        self.baudrate = baudrate
         self.timeout = None
         self.ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)  # open serial port
 
@@ -324,6 +375,8 @@ class Radio(object):
         self.payload0[3] = int(b,16) # assign second DEC (transferred from HEX) to the fourth number of paylaod0
         self.ser.write(self.Packet_Gen(self.payload0))
         print(f"radio frequency has been set to {freq} MHz.")
+
+
 
     def Set_Pow(self, pow):
         if pow == "low":
@@ -402,14 +455,14 @@ def Tx_set_standard_test_condition():
 def CSE_operation(freq, sub_range, limit_line):
     FSV.CSE_Setup(sub_range=sub_range, limit_line=limit_line)
     FSV.query('*OPC?')
-    CP50.Set_Freq(freq=freq)
+    CP50.Set_Freq(freq=freq+0.0125)
     CP50.Set_Pow("high")
     CP50.Radio_On()
     time.sleep(5)
     FSV.write("DISP:TRAC:MODE VIEW")
     CP50.Radio_Off()
-    FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
     FSV.get_CSE_result(freq=freq, sub_range=sub_range)
+    FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
 
 
 
@@ -428,7 +481,7 @@ except BaseException:
     pass
 
 try:
-    CP50 = Radio('com7')
+    CP50 = Radio('com10', baudrate=9600)
 except BaseException:
     print("Specified com port does not exsit.")
     pass

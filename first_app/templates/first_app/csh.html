@@ -3,16 +3,11 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title>CSL</title>
+    <title>CSH</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static "css/style.css" %}"/>
   </head>
   <body>
-    <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
-      <div class="container">
-        <a class="navbar-brand" href="#">GME</a>
-      </div>
-    </nav>
 
       <div class="container">
           <div class="jumbotron">
@@ -38,22 +33,22 @@
                   </tr>
               </thead>
               <tbody>
-                  {% for csl in cslouts %}
+                  {% for csh in cshouts %}
                   <tr>
-                    <td>{{ csl.SubRange }}</td>
-                    <td>{{ csl.CSE1_Frequency_MHz }}</td>
-                    <td>{{ csl.CSE1_Level_dBm }}</td>
-                    <td>{{ csl.CSE2_Frequency_MHz }}</td>
-                    <td>{{ csl.CSE2_Level_dBm }}</td>
-                    <td>{{ csl.limit_dBm }}</td>
-                    <td>{{ csl.Screenshot_file }}</td>
+                    <td>{{ csh.SubRange }}</td>
+                    <td>{{ csh.CSE1_Frequency_MHz }}</td>
+                    <td>{{ csh.CSE1_Level_dBm }}</td>
+                    <td>{{ csh.CSE2_Frequency_MHz }}</td>
+                    <td>{{ csh.CSE2_Level_dBm }}</td>
+                    <td>{{ csh.limit_dBm }}</td>
+                    <td>{{ csh.Screenshot_file }}</td>
                   </tr>
                   {% endfor %}
               </tbody>
           </table>
-          <script src="{% static "js/csl.js" %}"></script>
-          {% for csl in cslouts %}
-          <img src="{% static "result_images/cs/" %}{{csl.Screenshot_file}}" alt="pic not found." class="img-thumbnail">
+          <script src="{% static "js/csh.js" %}"></script>
+          {% for csh in cshouts %}
+          <img src="{% static "result_images/cs/" %}{{csh.Screenshot_file}}" alt="pic not found." class="img-thumbnail">
           {% endfor %}
       </div>
   </body>

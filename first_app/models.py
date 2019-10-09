@@ -34,6 +34,15 @@ class CSEOUT(models.Model):
     limit_dBm = models.FloatField(max_length=200)
     Screenshot_file = models.CharField(max_length=200)
 
+class CSHOUT(models.Model):
+    SubRange = models.CharField(max_length=200)
+    CSE1_Frequency_MHz = models.FloatField(max_length=200)
+    CSE1_Level_dBm = models.FloatField(max_length=200)
+    CSE2_Frequency_MHz = models.FloatField(max_length=200)
+    CSE2_Level_dBm = models.FloatField(max_length=200)
+    limit_dBm = models.FloatField(max_length=200)
+    Screenshot_file = models.CharField(max_length=200)
+
 
     def __str__(self):
         return self.SubRange

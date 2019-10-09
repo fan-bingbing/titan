@@ -9,4 +9,5 @@ urlpatterns = [
                 path('output/', views.output, name='output'),
                 path('acp/', views.acp, name='acp'),
                 path('cs/', views.cs, name='cs'),
+                path('csh/', views.csh, name='csh'),
 ]
