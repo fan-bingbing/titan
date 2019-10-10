@@ -53,6 +53,13 @@
       <div class="jumbotron">
         <img src="{% static "images/GME.png" %}" alt="pic not found.">
         <h2>Search Equipment...</h2>
+        <div class="container">
+          <form method="post" class="input_form">
+            {{form.as_table}}
+            {% csrf_token %}
+            <input type="submit" class="btn btn-primary" value="Submit">
+          </form>
+        </div>
       </div>
 
       {% for eq in equips %}

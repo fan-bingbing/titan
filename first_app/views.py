@@ -14,22 +14,50 @@ except BaseException:
     pass
 
 try:
+    from first_app.definition import SMB1
+except BaseException:
+    print("SMB1 import failed, FSV might be not on")
+    pass
+
+try:
+    from first_app.definition import SMB2
+except BaseException:
+    print("SMB2 import failed, FSV might be not on")
+    pass
+
+try:
     from first_app.definition import CP50
 except BaseException:
     print("CP50 import failed, CP50 might be not connected.")
     pass
 
-try:
-    from first_app.definition import SMB
-except BaseException:
-    print("SMB import failed, SMB might be not on")
-    pass
-
 
 # Create your views here.
 def index(request):
-    # if request.method == 'POST': # 'post' will not work here
-    #     print("SEARCH SUCCESS!")
+    form = forms.INPUTINDEX()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTINDEX(request.POST)
+        if form.is_valid():
+            #do something
+            try:
+                FSV = SpecAn(form.cleaned_data['fsv'])
+            except BaseException:
+                print("FSV is not on.")
+                pass
+
+            try:
+                SMB1 = SigGen(form.cleaned_data['smb1'])
+            except BaseException:
+                print("SMB1 is not on.")
+                pass
+
+            try:
+                SMB2 = SigGen(form.cleaned_data['smb2'])
+            except BaseException:
+                print("SMB2 is not on.")
+                pass
+
+
     rm = df.pyvisa.ResourceManager()
     print(rm.list_resources())
     RES.objects.all().delete()# delete all objects(entries) at start
@@ -48,6 +76,7 @@ def index(request):
     res_dict = {
         'equips': res_list
     }
+    res_dict.update({'form':form})
 
     return render(request, 'first_app/index.html', context=res_dict)
 
@@ -172,8 +201,8 @@ def acp(request):
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
             print("input frequency: " + str(test_freq))
-            SMB.Tx_Setup()
-            SMB.query('*OPC?')
+            SMB1.Tx_Setup()
+            SMB1.query('*OPC?')
             FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
             CP50.Set_Freq(freq=test_freq+0.0125)
@@ -188,7 +217,7 @@ def acp(request):
             time.sleep(8)
             FSV.write(f"DISP:TRAC:MODE VIEW")
             CP50.Radio_Off()
-            SMB.write("LFO OFF")# turn off audio output at the end of the test
+            SMB1.write("LFO OFF")# turn off audio output at the end of the test
             FSV.screenshot(file_name='ACP_'+str(test_freq)+'_MHz', folder='acp')
             ACP = FSV.query("CALC:MARK:FUNC:POW:RES? ACP")
             ACP_LIST = df.re.findall(r'-?\d+\.\d+', ACP) # -? with or without negative sign, \d+ one or more digit
@@ -231,8 +260,8 @@ def mad(request):
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
             print("input frequency: " + str(test_freq))
-            SMB.Tx_Setup()
-            SMB.query('*OPC?')
+            SMB1.Tx_Setup()
+            SMB1.query('*OPC?')
             FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
             CP50.Set_Freq(freq=test_freq+0.0125)
@@ -243,13 +272,13 @@ def mad(request):
             Level_AF = df.Tx_set_standard_test_condition()
             # below code block is to vary audio frequency to complete the test
             Level_AF = 10*Level_AF # bring audio level up 20dB in one step( 10times valtage)
-            SMB.write(f"LFO:VOLT {Level_AF}mV")
+            SMB1.write(f"LFO:VOLT {Level_AF}mV")
             print(f"Audio level has been set to {Level_AF} mV")
 
             for i in range(0,13):
                 print(f"At Audio frequency:{AF_list1[i]}")
-                SMB.write(f"LFO:FREQ {AF_list1[i]}Hz")
-                SMB.query('*OPC?')
+                SMB1.write(f"LFO:FREQ {AF_list1[i]}Hz")
+                SMB1.query('*OPC?')
                 time.sleep(1)
                 FSV.write(f"INIT:CONT OFF")
                 time.sleep(1)
@@ -270,13 +299,13 @@ def mad(request):
                                             timestamp=Timestamp
                                             )[0]
             Level_AF = Level_AF/10
-            SMB.write(f"LFO:VOLT {Level_AF}mV")
+            SMB1.write(f"LFO:VOLT {Level_AF}mV")
             print(f"Audio level has been set to {Level_AF} mV")
 
             for i in range(0,11):
                 print(f"At Audio frequency:{AF_list2[i]}")
-                SMB.write(f"LFO:FREQ {AF_list2[i]}Hz")
-                SMB.query('*OPC?')
+                SMB1.write(f"LFO:FREQ {AF_list2[i]}Hz")
+                SMB1.query('*OPC?')
                 time.sleep(1)
                 FSV.write(f"INIT:CONT OFF")
                 time.sleep(1)
@@ -297,7 +326,7 @@ def mad(request):
                                             timestamp=Timestamp
                                             )[0]
             CP50.Radio_Off()
-            SMB.write("LFO OFF")# turn off audio output at the end of the test
+            SMB1.write("LFO OFF")# turn off audio output at the end of the test
             indication = (FSV.query("*OPC?")).replace("1","Completed.")
             print(f"Maximum Deviation test {indication}")
             mad_list = MADOUT.objects.all()

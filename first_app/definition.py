@@ -425,14 +425,14 @@ class Excel(object):
 
 def Tx_set_standard_test_condition():
     Dev_Reading = float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000.0 #get the initial deviation value
-    Level_AF = float(SMB.Lev_AF())# initial Level_AF
+    Level_AF = float(SMB1.Lev_AF())# initial Level_AF
 # above code is to find Audio output level
 # satisfying standard condtion (around 1.5kHz deviation)
     if Dev_Reading < 1.5:
         while Dev_Reading < 1.47:
             print(f"current deviation:{Dev_Reading}kHz")
             Level_AF = Level_AF+1
-            SMB.write(f"LFO:VOLT {Level_AF}mV")
+            SMB1.write(f"LFO:VOLT {Level_AF}mV")
             FSV.write(f"INIT:CONT ON")
             time.sleep(1)
             FSV.write(f"INIT:CONT OFF")
@@ -442,7 +442,7 @@ def Tx_set_standard_test_condition():
         while Dev_Reading > 1.53:
             print(f"current deviation:{Dev_Reading}kHz")
             Level_AF = Level_AF-1
-            SMB.write(f"LFO:VOLT  {Level_AF}mV")
+            SMB1.write(f"LFO:VOLT  {Level_AF}mV")
             FSV.write(f"INIT:CONT ON")
             time.sleep(1)
             FSV.write(f"INIT:CONT OFF")
@@ -466,10 +466,7 @@ def CSE_operation(freq, sub_range, limit_line, cutoff, filter='NA'):
     FSV.get_CSE_result(freq=freq, sub_range=sub_range)
     FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
 
-
-
 equip_list = RES.objects.all()
-
 try:
     FSV = SpecAn(equip_list[0].resadd)
 except BaseException:
@@ -477,9 +474,15 @@ except BaseException:
     pass
 
 try:
-    SMB = SigGen(equip_list[2].resadd)
+    SMB1 = SigGen(equip_list[1].resadd)
 except BaseException:
-    print("SMB is not on.")
+    print("SMB1 is not on.")
+    pass
+
+try:
+    SMB2 = SigGen(equip_list[2].resadd)
+except BaseException:
+    print("SMB2 is not on.")
     pass
 
 try:
