@@ -1,11 +1,42 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT, CSHOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT, CSHOUT, ACSOUT
 import time
 from . import forms
 import first_app.definition as df
 from first_app.forms import INPUTRES
 import csv
 from django.http import HttpResponse
+
+# equip_list = RES.objects.all()
+# FSVIP = equip_list[0].resadd
+# SMB1IP = equip_list[1].resadd
+# SMB2IP = equip_list[2].resadd
+#
+# try:
+#     FSV = df.SpecAn(FSVIP)
+# except BaseException:
+#     print("FSV is not on.")
+#     pass
+#
+# try:
+#     SMB1 = df.SigGen(SMB1IP)
+# except BaseException:
+#     print("SMB1 is not on.")
+#     pass
+#
+# try:
+#     SMB2 = df.SigGen(SMB2IP)
+# except BaseException:
+#     print("SMB2 is not on.")
+#     pass
+#
+# try:
+#     EUT = df.Radio('com10', baudrate=9600)
+# except BaseException:
+#     print("Specified com port does not exsit.")
+#     pass
+
+
 
 try:
     from first_app.definition import FSV
@@ -16,19 +47,25 @@ except BaseException:
 try:
     from first_app.definition import SMB1
 except BaseException:
-    print("SMB1 import failed, FSV might be not on")
+    print("SMB1 import failed, SMB1 might be not on")
     pass
 
 try:
     from first_app.definition import SMB2
 except BaseException:
-    print("SMB2 import failed, FSV might be not on")
+    print("SMB2 import failed, SMB2 might be not on")
     pass
 
 try:
-    from first_app.definition import CP50
+    from first_app.definition import EUT
 except BaseException:
-    print("CP50 import failed, CP50 might be not connected.")
+    print("EUT import failed, EUT might be not connected.")
+    pass
+
+try:
+    from first_app.definition import SC
+except BaseException:
+    print("SC import failed, SC might be not connected.")
     pass
 
 
@@ -37,25 +74,32 @@ def index(request):
     form = forms.INPUTINDEX()
     if request.method == 'POST': # 'post' will not work here
         form = forms.INPUTINDEX(request.POST)
-        if form.is_valid():
+        # if form.is_valid():
+            # global FSVIP, SMB1IP, SMB2IP
+            # FSVIP = form.cleaned_data['fsv']
+            # SMB1IP = form.cleaned_data['smb1']
+            # SMB2IP = form.cleaned_data['smb2']
+
             #do something
-            try:
-                FSV = SpecAn(form.cleaned_data['fsv'])
-            except BaseException:
-                print("FSV is not on.")
-                pass
+            # try:
+            #     FSV = SpecAn(form.cleaned_data['fsv'])
+            # except BaseException:
+            #     print("FSV is NOT not on.")
+            #     pass
 
-            try:
-                SMB1 = SigGen(form.cleaned_data['smb1'])
-            except BaseException:
-                print("SMB1 is not on.")
-                pass
-
-            try:
-                SMB2 = SigGen(form.cleaned_data['smb2'])
-            except BaseException:
-                print("SMB2 is not on.")
-                pass
+            # try:
+            #     SMB1.close()
+            #     # SMB1 = SigGen(form.cleaned_data['smb1'])
+            # except BaseException:
+            #     print("SMB1 is not on.")
+            #     pass
+            #
+            # try:
+            #     SMB2.close()
+            #     # SMB2 = SigGen(form.cleaned_data['smb2'])
+            # except BaseException:
+            #     print("SMB2 is not on.")
+            #     pass
 
 
     rm = df.pyvisa.ResourceManager()
@@ -170,15 +214,15 @@ def fep(request):
             print("input frequency: " + str(test_freq))
             FSV.FEP_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=test_freq+0.0125)
+            EUT.Set_Freq(freq=test_freq+0.0125)
             # adding 0.0125MHz makes absolutely no sense but fixed problem...
-            CP50.Set_Pow("high")
-            CP50.Radio_On()
+            EUT.Set_Pow("high")
+            EUT.Radio_On()
             time.sleep(2)
             FSV.write("DISP:TRAC:MODE MAXH")
             time.sleep(3)
             FSV.write("DISP:TRAC:MODE VIEW")
-            CP50.Radio_Off()
+            EUT.Radio_Off()
             fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
             fep_result.update({'form':form})#joint form and result dictionary
 
@@ -205,9 +249,9 @@ def acp(request):
             SMB1.query('*OPC?')
             FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=test_freq+0.0125)
-            CP50.Set_Pow("high")
-            CP50.Radio_On()
+            EUT.Set_Freq(freq=test_freq+0.0125)
+            EUT.Set_Pow("high")
+            EUT.Radio_On()
             time.sleep(2)
             FSV.write(f"INIT:CONT OFF")
 
@@ -216,7 +260,7 @@ def acp(request):
             FSV.ACP_Setup(freq=test_freq)
             time.sleep(8)
             FSV.write(f"DISP:TRAC:MODE VIEW")
-            CP50.Radio_Off()
+            EUT.Radio_Off()
             SMB1.write("LFO OFF")# turn off audio output at the end of the test
             FSV.screenshot(file_name='ACP_'+str(test_freq)+'_MHz', folder='acp')
             ACP = FSV.query("CALC:MARK:FUNC:POW:RES? ACP")
@@ -255,8 +299,8 @@ def mad(request):
     if request.method == 'POST': # 'post' will not work here
         form = forms.INPUTFREQ(request.POST)
         if form.is_valid():
-            MADOUT.objects.all().delete()
             #do something
+            MADOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
             print("input frequency: " + str(test_freq))
@@ -264,9 +308,9 @@ def mad(request):
             SMB1.query('*OPC?')
             FSV.DeMod_Setup(freq=test_freq)
             FSV.query('*OPC?')
-            CP50.Set_Freq(freq=test_freq+0.0125)
-            CP50.Set_Pow("high")
-            CP50.Radio_On()
+            EUT.Set_Freq(freq=test_freq+0.0125)
+            EUT.Set_Pow("high")
+            EUT.Radio_On()
             time.sleep(2)
             FSV.write(f"INIT:CONT OFF")
             Level_AF = df.Tx_set_standard_test_condition()
@@ -296,7 +340,7 @@ def mad(request):
                                             avepeak_kHz=Reading_array1[i][2],
                                             limit_kHz=2.5,
                                             margin_kHz=round(2.5-abs(Reading_array1[i][2]),5),
-                                            timestamp=Timestamp
+                                            TimeStamp=Timestamp
                                             )[0]
             Level_AF = Level_AF/10
             SMB1.write(f"LFO:VOLT {Level_AF}mV")
@@ -323,9 +367,9 @@ def mad(request):
                                             avepeak_kHz=Reading_array2[i][2],
                                             limit_kHz=2.5,
                                             margin_kHz=round(2.5-abs(Reading_array2[i][2]),5),
-                                            timestamp=Timestamp
+                                            TimeStamp=Timestamp
                                             )[0]
-            CP50.Radio_Off()
+            EUT.Radio_Off()
             SMB1.write("LFO OFF")# turn off audio output at the end of the test
             indication = (FSV.query("*OPC?")).replace("1","Completed.")
             print(f"Maximum Deviation test {indication}")
@@ -338,3 +382,50 @@ def mad(request):
             return render(request, 'first_app/mad.html', context=mad_dict)
 
     return render(request, 'first_app/mad.html', {'form':form})# always return input form
+
+def acs(request):
+
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            #do something
+            ACSOUT.objects.all().delete()
+            print("VALIDATION SUCCESS!")
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
+
+            ACS_high = df.ACS_operation(freq=test_freq, delta=0.0125)
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+                                        CH_Lev_dBuV=SMB1.Lev_RF(),
+                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                        IN_Lev_dBuV=SMB2.Lev_RF(),
+                                        ACS_dB=ACS_high,
+                                        limit_dB=60.0,
+                                        TimeStamp=Timestamp
+                                        )[0]
+
+            ACS_low = df.ACS_operation(freq=test_freq, delta=-0.0125)
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+                                        CH_Lev_dBuV=SMB1.Lev_RF(),
+                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                        IN_Lev_dBuV=SMB2.Lev_RF(),
+                                        ACS_dB=ACS_low,
+                                        limit_dB=60.0,
+                                        TimeStamp=Timestamp
+                                        )[0]
+        EUT.Radio_Off()
+        SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+        SMB2.write("OUTP1 OFF")
+        print("Adjacent Channel Selectivity test completed.")
+        acs_list = ACSOUT.objects.all()
+        acs_dict = {
+                'acsouts': acs_list
+            }
+
+        acs_dict.update({'form':form})#joint form and result dictionary
+        return render(request, 'first_app/acs.html', context=acs_dict)
+
+    return render(request, 'first_app/acs.html', {'form':form})# always return input form
