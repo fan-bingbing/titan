@@ -395,7 +395,7 @@ def acs(request):
             test_freq = form.cleaned_data['test_frequency_in_MHz']
             print("input frequency: " + str(test_freq))
 
-            ACS_high = df.ACS_operation(freq=test_freq, delta=0.0125)
+            ACS_high = df.ACS_operation(freq=test_freq, delta=0.0125, average=5)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
@@ -406,7 +406,7 @@ def acs(request):
                                         TimeStamp=Timestamp
                                         )[0]
 
-            ACS_low = df.ACS_operation(freq=test_freq, delta=-0.0125)
+            ACS_low = df.ACS_operation(freq=test_freq, delta=-0.0125, average=5)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),

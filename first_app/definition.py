@@ -26,10 +26,10 @@ from subprocess import Popen, PIPE
 from first_app.models import FEP, RES, DEMOD, TXSIG, ACP, CSE, CSEOUT, CSHOUT, RXSIG
 
 class SoundCard(object):
-    def __init__(self):
-        self.gain = 10
+    def __init__(self, samplerate):
+        self.gain = 1
         self.duration = 0.1 # sample record duration
-        self.sample_rate = 44100
+        self.sample_rate = samplerate
         self.device = ('Microphone (Sound Blaster Play!, MME',
                        'Speakers (Sound Blaster Play! 3, MME')
         sd.query_devices(self.device[0])
@@ -37,134 +37,131 @@ class SoundCard(object):
         sd.default.channels = 1
         sd.default.samplerate = self.sample_rate
 
-    def get_sample(self, average=5):
-        x4 = np.full(3528, 0.0)
-        for i in range(0, average):
-            x1 = sd.rec(int(self.duration*self.sample_rate), dtype='float32', blocking=True) # record 0.1 seconds input signal from microphone
+    def get_sample(self, ccitt):
+        x1 = sd.rec(int(self.duration*self.sample_rate), dtype='float32', blocking=True) # record 0.1 seconds input signal from microphone
 
-            x2 = self.gain*x1[int(self.duration*self.sample_rate/1000):int(self.duration*self.sample_rate)] # take effective samples
+        x2 = self.gain*x1[int(self.duration*self.sample_rate/1000):int(self.duration*self.sample_rate)] # take effective samples
 
-            x3 = x2[0:int(80*(self.sample_rate/1000))] # take first 80ms duration samples
+        x3 = x2[0:int(80*(self.sample_rate/1000))] # take first 80ms duration samples
 
-            x4 = x3.flatten()# transfer 2D array to 1D, ready for fft operation, fft function can only take 1D array as input
+        x4 = x3.flatten()# transfer 2D array to 1D, ready for fft operation, fft function can only take 1D array as input
 
-
-        x4 = x4 / average
-        # print(x4)
-
-
-        t = 80*np.linspace(0, 1, np.size(x4))# generate 80ms time axis VS samples for first 80ms
-
-        X = fft(x4) # fft transform
-        n = np.size(t)
-        self.fr = (self.sample_rate/2)*np.linspace(0, 1, int(n/2)) # generate frequecny axis array
-
-        X_m = (2/n)*abs(X[0:np.size(self.fr)])
-
-        # print(np.size(X_m))# M=2*np.size(X_m)=3528
-        # print(X_m)
-
-        return {'Time_level':x4, 'Time':t, 'Freq_level':X_m, 'Freq':self.fr}
-
-    def get_SINAD(self, dict): # accept returned dictionary from get_sample()
-        X_mmax = np.max(dict['Freq_level']) # find maximum value in numpy array
-        # print(X_mmax)
-        fr_index = np.where(dict['Freq_level'] == X_mmax) # locate index in numpy array
-        fr_max = dict['Freq'][fr_index] # find corresponding frequency of maximum value
-
-        # print(fr_max)
-        # print(fr_index)
-        # print(fr_max)
-
-        SND = np.sum(dict['Freq_level'][24:240]) # from 300Hz to 3kHz get SND
-        # print(SND)
-        mask = self.mask_gen(x=fr_index[0], y=SND, z=self.fr)
-        ND = np.sum(dict['Freq_level'][24:240] * mask[24:240]) # from 300Hz to 3kHz get ND
-        # print(ND)
-        # 1kHz at index 80
-        #freq bin width = fs/M = 44100/3528 = 12.5Hz
-        # 300/12.5 = 24 meaning 300Hz at index 24
-        # 3000/12.5 = 240 meaning 3kHz at index 240
-        SINAD = 20 * np.log10(SND/ND) # calculate SINAD
+        SINAD = self.SINAD(x4, self.sample_rate, psophometric_weighting = ccitt)
+        # print(SINAD)
         return SINAD
 
-    def mask_gen(self, x, y, z):
-        mask = np.full(np.size(z), 1)
-        mask[x]=0
-        if y>=9.0:
-            for i in range(1,30):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 30")
-        elif y>=8.0:
-            for i in range(1,40):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 40")
-        elif y>=7.0:
-            for i in range(1,55):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 55")
-        elif y>=6.0:
-            for i in range(1,70):
-                mask[x-i]=0
-                mask[x+i]=0
-                print("filter bin set to 70")
-        elif y>=5.0:
-            for i in range(1,85):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 85")
-        elif y>=4.0:
-            for i in range(1,100):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 100")
-        elif y>=3.0:
-            for i in range(1,110):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 110")
-        elif y>=2.0:
-            for i in range(1,120):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 120")
-        else:
-            for i in range(1,130):
-                mask[x-i]=0
-                mask[x+i]=0
-            print("filter bin set to 130")
-
-        return mask
+        # t = 80*np.linspace(0, 1, np.size(x4))# generate 80ms time axis VS samples for first 80ms
+    def apply_psophometric_weighting(self, fft_samples, sample_rate):
+        ccitt_frequencies = (
+            16.6, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200,
+            1400, 1600, 1800, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000)
+        ccitt_response = (
+            -85.0, -63.0, -41.0, -21.0, -10.6, -6.3, -3.6, -2.0, -0.9, 0.0,
+            0.6, 1.0, 0.0, -0.9, -1.7, -2.4, -3.0, -4.2, -5.6, -8.5, -15.0,
+            -25.0, -36.0, -43.0)
+        n_fft = len(fft_samples)
+        masked_fft_samples = np.zeros_like(fft_samples)
+        for i in range(n_fft):
+            f_fft = i * float(sample_rate) / n_fft
+            # Zero out the output outside of the CCITT range
+            if f_fft < ccitt_frequencies[0] or f_fft > ccitt_frequencies[-1]:
+                masked_fft_samples[i] = 1e-99
+            # Interpolate in log-x axis domain when within the range
+            else:
+                for j in range(0, len(ccitt_frequencies) - 1):
+                    if f_fft >= ccitt_frequencies[j] and f_fft <= ccitt_frequencies[j+1]:
+                        x = np.log10(f_fft)
+                        x0 = np.log10(ccitt_frequencies[j])
+                        x1 = np.log10(ccitt_frequencies[j+1])
+                        y0 = ccitt_response[j]
+                        y1 = ccitt_response[j+1]
+                        y_dB = y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+                        masked_fft_samples[i] = fft_samples[i] * 10**(y_dB/20.0)
+                        break
+        return masked_fft_samples
 
 
-    def live_plots(self):
-        dict = self.get_sample()
-        fig, (ax0, ax1) = plt.subplots(nrows=2)
-        ax0.set_title('Sinusoidal Signal')
-        ax0.set_xlabel('Time(ms)')
-        ax0.set_ylabel('Amplitude')
-        ax0.set_ylim(-2, 2)
-        line0, = ax0.plot(dict['Time'], dict['Time_level']) # time VS level plot
 
-        ax1.set_title('Magnitude Spectrum')
-        ax1.set_xlabel('Frequency(Hz)')
-        ax1.set_ylabel('Magnitude')
-        ax1.set_ylim(0, 1.5)
-        ax3 = ax1.text(0.3, 0.9, 'SINAD', transform=ax1.transAxes)
-        line1, = ax1.plot(dict['Freq'], dict['Freq_level']) # frequency VS level plot
+    def SINAD(self, samples, sample_rate, test_tone_frequency = 1000,
+        freq_range_min = 50, freq_range_max = 15000, psophometric_weighting = False):
 
-        fig.subplots_adjust(hspace=0.6)
+        '''Return SINAD (signal to noise and distortion) in dB of real-valued sinusoidal signal.
 
-        while True:
-            dict = self.get_sample()
-            line0.set_ydata(dict['Time_level']) # update data in plots only in loop instead of update entire plots
-            line1.set_ydata(dict['Freq_level'])
-            ax3.set_text('SINAD = %.2f dB' % self.get_SINAD(dict=dict)) # update SINAD value
+        Arguments:
+            samples... a numpy array of input audio samples. This needs at least a few k of samples to ensure the accuracy.
+            sample_rate... sampling frequency in Hz
+            test_tone_frequency... frequency of the tone (default: 1000)
+            freq_range_min... high pass filter cutoff in Hz (default: 50, same as HP8920)
+            freq_range_max... low pass filter cutoff in Hz (default: 15000, same as HP8920)
+            psophometric_weighting... apply psophometric weighting if True (default: False)
+        '''
 
-            plt.pause(0.01)# this command will call plt.show()
+        # Ensure input is an array of floats
+        samples = np.array(samples, np.float)
+        n_samples = len(samples)
+        samples_w = samples * np.kaiser(n_samples, beta = 16.0)
+        notch_width = 0.1 # notch width depends on the kaiser Beta coefficient
+
+        # Zero pad to adjust the size to the next power of two
+        n_fft = int(2**np.ceil(np.log2(n_samples)))
+        samples_w = np.concatenate((samples_w, np.zeros(n_fft - n_samples)))
+
+        # Go to frequency domain
+        samples_fft = np.fft.rfft(samples_w)
+
+        # Apply the band pass filter
+        samples_fft_filt = samples_fft
+        hpf_bin = int(n_fft * float(freq_range_min) / sample_rate)
+        samples_fft_filt[:hpf_bin] = 1e-99
+        lpf_bin = int(n_fft * float(freq_range_max) / sample_rate)
+        samples_fft_filt[lpf_bin:] = 1e-99
+
+        # Apply the psophometric weighting
+        if psophometric_weighting:
+            samples_fft_filt = self.apply_psophometric_weighting(samples_fft_filt, sample_rate)
+
+        # Transform the filtered signal + noise back to time domain and measure the power
+        samples_filt = np.fft.irfft(samples_fft_filt)
+        signal_plus_noise_power = np.mean(np.absolute(samples_filt)**2)
+
+        # Notch out the test tone
+        notch_low_bin = int(n_fft * (1.0 - 0.5 * notch_width) * test_tone_frequency / sample_rate)
+        notch_high_bin = int(n_fft * (1.0 + 0.5 * notch_width) * test_tone_frequency / sample_rate)
+        samples_fft_filt[notch_low_bin : notch_high_bin] = 1e-99
+
+        # Transform the left over noise (+ distortion) back to time domain and measure the power
+        noise_filt = np.fft.irfft(samples_fft_filt)
+        noise_power = np.mean(np.absolute(noise_filt)**2)
+
+        # Return the SINAD in dB
+        return 10 * np.log10(signal_plus_noise_power / noise_power)
+
+
+    # def live_plots(self):
+    #     dict = self.get_sample()
+    #     fig, (ax0, ax1) = plt.subplots(nrows=2)
+    #     ax0.set_title('Sinusoidal Signal')
+    #     ax0.set_xlabel('Time(ms)')
+    #     ax0.set_ylabel('Amplitude')
+    #     ax0.set_ylim(-2, 2)
+    #     line0, = ax0.plot(dict['Time'], dict['Time_level']) # time VS level plot
+    #
+    #     ax1.set_title('Magnitude Spectrum')
+    #     ax1.set_xlabel('Frequency(Hz)')
+    #     ax1.set_ylabel('Magnitude')
+    #     ax1.set_ylim(0, 1.5)
+    #     ax3 = ax1.text(0.3, 0.9, 'SINAD', transform=ax1.transAxes)
+    #     line1, = ax1.plot(dict['Freq'], dict['Freq_level']) # frequency VS level plot
+    #
+    #     fig.subplots_adjust(hspace=0.6)
+    #
+    #     while True:
+    #         dict = self.get_sample()
+    #         line0.set_ydata(dict['Time_level']) # update data in plots only in loop instead of update entire plots
+    #         line1.set_ydata(dict['Freq_level'])
+    #         ax3.set_text('SINAD = %.2f dB' % self.get_SINAD(dict=dict)) # update SINAD value
+    #
+    #         plt.pause(0.01)# this command will call plt.show()
 
 class SigGen(object):
 
@@ -640,26 +637,31 @@ def CSE_operation(freq, sub_range, limit_line, cutoff, filter='NA'):
     FSV.get_CSE_result(freq=freq, sub_range=sub_range)
     FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
 
-def ACS_operation(freq, delta):
+def ACS_operation(freq, delta, average):
     EUT.Set_Freq(freq=freq+0.0125)
     SMB1.Wanted_Signal(freq=freq)
     SMB1.query('*OPC?')
     SMB2.Unwanted_Signal(freq=freq+delta)
     SMB2.query('*OPC?')
 
-    SINAD = SC.get_SINAD(dict=SC.get_sample())
-    # get initial SINAD from SC
-    print(SINAD)
-    Level_RF = SMB2.Lev_RF()
+    SINAD = SC.get_sample(ccitt=True) # get initial SINAD from SC
+
+    Level_RF = float(SMB2.Lev_RF())
     for i in range(0,100):
         if SINAD > 14.0:
-            Level_RF = float(Level_RF) + 1
+            Level_RF = Level_RF + 0.5
             SMB2.write(f":POW {Level_RF}dBuV")
             SMB2.query('*OPC?')
-            SINAD = SC.get_SINAD(dict=SC.get_sample())
+
+            SINAD = 0
+            for i in range(0, average):
+                SINAD += SC.get_sample(ccitt=True)
+            SINAD = SINAD / float(average) # take average of certain values
             print(SINAD)
+
         else:
             break
+
     ACS = Level_RF - float(SMB1.Lev_RF())
     return ACS
 
@@ -694,7 +696,7 @@ except BaseException:
     pass
 
 try:
-    SC = SoundCard()
+    SC = SoundCard(samplerate=44100)
 except BaseException:
     print("Specified Soundcard does not exist.")
     pass
