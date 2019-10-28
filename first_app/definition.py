@@ -665,6 +665,35 @@ def ACS_operation(freq, delta, average):
     ACS = Level_RF - float(SMB1.Lev_RF())
     return ACS
 
+def BLK_operation(freq, delta, average):
+    EUT.Set_Freq(freq=freq+0.0125)
+    SMB1.Wanted_Signal(freq=freq)
+    SMB1.query('*OPC?')
+    SMB2.Unwanted_Signal(freq=freq+delta)
+    SMB2.write(f":FM:STAT OFF")# turn off modulation
+    SMB2.query('*OPC?')
+
+    SINAD = SC.get_sample(ccitt=True) # get initial SINAD from SC
+
+    Level_RF = float(SMB2.Lev_RF())
+    for i in range(0,100):
+        if SINAD > 14.0:
+            Level_RF = Level_RF + 1.0
+            SMB2.write(f":POW {Level_RF}dBuV")
+            SMB2.query('*OPC?')
+
+            SINAD = 0
+            for i in range(0, average):
+                SINAD += SC.get_sample(ccitt=True)
+            SINAD = SINAD / float(average) # take average of certain values
+            print(SINAD)
+
+        else:
+            break
+
+    BLK = Level_RF - float(SMB1.Lev_RF())
+    return BLK
+
 
 
 

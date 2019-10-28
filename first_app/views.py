@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT, CSHOUT, ACSOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT, CSHOUT, ACSOUT, BLKOUT
 import time
 from . import forms
 import first_app.definition as df
@@ -429,3 +429,50 @@ def acs(request):
         return render(request, 'first_app/acs.html', context=acs_dict)
 
     return render(request, 'first_app/acs.html', {'form':form})# always return input form
+
+def blk(request):
+
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            #do something
+            BLKOUT.objects.all().delete()
+            print("VALIDATION SUCCESS!")
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
+
+            BLK_high = df.BLK_operation(freq=test_freq, delta=1.0, average=5)
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            blk_list = BLKOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+                                        CH_Lev_dBuV=SMB1.Lev_RF(),
+                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                        IN_Lev_dBuV=SMB2.Lev_RF(),
+                                        BLK_dB=BLK_high,
+                                        limit_dB=80.0,
+                                        TimeStamp=Timestamp
+                                        )[0]
+
+            BLK_low = df.BLK_operation(freq=test_freq, delta=-1.0, average=5)
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            blk_list = BLKOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+                                        CH_Lev_dBuV=SMB1.Lev_RF(),
+                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                        IN_Lev_dBuV=SMB2.Lev_RF(),
+                                        BLK_dB=BLK_low,
+                                        limit_dB=80.0,
+                                        TimeStamp=Timestamp
+                                        )[0]
+        EUT.Radio_Off()
+        SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+        SMB2.write("OUTP1 OFF")
+        print("Adjacent Channel Selectivity test completed.")
+        blk_list = BLKOUT.objects.all()
+        blk_dict = {
+                'blkouts': blk_list
+            }
+
+        blk_dict.update({'form':form})#joint form and result dictionary
+        return render(request, 'first_app/blk.html', context=blk_dict)
+
+    return render(request, 'first_app/blk.html', {'form':form})# always return input form
