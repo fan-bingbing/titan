@@ -12,4 +12,5 @@ urlpatterns = [
                 path('csh/', views.csh, name='csh'),
                 path('acs/', views.acs, name='acs'),
                 path('blk/', views.blk, name='blk'),
+                path('sr/', views.sr, name='sr'),
 ]

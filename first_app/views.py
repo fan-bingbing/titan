@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, CSEOUT, CSHOUT, ACSOUT, BLKOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
+from first_app.models import CSEOUT, CSHOUT, ACSOUT, BLKOUT, SROUT
 import time
 from . import forms
 import first_app.definition as df
@@ -395,7 +396,7 @@ def acs(request):
             test_freq = form.cleaned_data['test_frequency_in_MHz']
             print("input frequency: " + str(test_freq))
 
-            ACS_high = df.ACS_operation(freq=test_freq, delta=0.0125, average=5)
+            ACS_high = df.Rx_test_operation(freq=test_freq, delta=0.0125)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
@@ -406,7 +407,7 @@ def acs(request):
                                         TimeStamp=Timestamp
                                         )[0]
 
-            ACS_low = df.ACS_operation(freq=test_freq, delta=-0.0125, average=5)
+            ACS_low = df.Rx_test_operation(freq=test_freq, delta=-0.0125)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
@@ -427,8 +428,44 @@ def acs(request):
 
         acs_dict.update({'form':form})#joint form and result dictionary
         return render(request, 'first_app/acs.html', context=acs_dict)
-
     return render(request, 'first_app/acs.html', {'form':form})# always return input form
+
+def sr(request):
+
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            #do something
+            SROUT.objects.all().delete()
+            print("VALIDATION SUCCESS!")
+            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            print("input frequency: " + str(test_freq))
+
+            SR = df.Rx_test_operation(freq=test_freq, delta=-2*21.4, step=1.0)
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            sr_list = SROUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+                                        CH_Lev_dBuV=SMB1.Lev_RF(),
+                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                        IN_Lev_dBuV=SMB2.Lev_RF(),
+                                        SR_dB=SR,
+                                        limit_dB=70.0,
+                                        TimeStamp=Timestamp
+                                        )[0]
+
+        EUT.Radio_Off()
+        SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+        SMB2.write("OUTP1 OFF")
+        print("Spurious Response test completed.")
+        sr_list = SROUT.objects.all()
+        sr_dict = {
+                'srouts': sr_list
+            }
+
+        sr_dict.update({'form':form})#joint form and result dictionary
+        return render(request, 'first_app/sr.html', context=sr_dict)
+
+    return render(request, 'first_app/sr.html', {'form':form})# always return input form
 
 def blk(request):
 
@@ -442,7 +479,7 @@ def blk(request):
             test_freq = form.cleaned_data['test_frequency_in_MHz']
             print("input frequency: " + str(test_freq))
 
-            BLK_high = df.BLK_operation(freq=test_freq, delta=1.0, average=5)
+            BLK_high = df.Rx_test_operation(freq=test_freq, delta=1.0, UMD='OFF', step=1.0)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             blk_list = BLKOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
@@ -453,7 +490,7 @@ def blk(request):
                                         TimeStamp=Timestamp
                                         )[0]
 
-            BLK_low = df.BLK_operation(freq=test_freq, delta=-1.0, average=5)
+            BLK_low = df.Rx_test_operation(freq=test_freq, delta=-1.0, UMD='OFF', step=1.0)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             blk_list = BLKOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
