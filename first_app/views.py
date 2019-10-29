@@ -137,6 +137,14 @@ def output(request):
 
             writer = csv.writer(response)
 
+            list = SROUT.objects.all()
+            writer.writerow(SROUT.objects.filter(CH_Freq_MHz=164.075).values().get())
+            for item in list:
+                writer.writerow(SROUT.objects.filter(CH_Freq_MHz=item).values_list().get())
+
+
+
+
             AF_list = MADOUT.objects.all() # get a audio freq list from MADOUT
 
             # write MADOUT fields in first row

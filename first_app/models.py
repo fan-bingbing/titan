@@ -117,7 +117,7 @@ class BLKOUT(models.Model):
         return self.CH_Freq_MHz
 
 class SROUT(models.Model):
-    CH_Freq_MHz = models.CharField(max_length=200)
+    CH_Freq_MHz = models.CharField(primary_key=True, max_length=200)
     CH_Lev_dBuV = models.CharField(max_length=200)
     IN_Freq_MHz = models.FloatField(max_length=200)
     IN_Lev_dBuV = models.CharField(max_length=200)
