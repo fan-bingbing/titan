@@ -140,20 +140,14 @@ def output(request):
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
+            writer.writerow([''])
             writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values().get())
             writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values_list().get())
             writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test2').values_list().get())
+            writer.writerow([''])
             writer.writerow(SROUT.objects.filter(Test_name='SR_test').values().get())
             writer.writerow(SROUT.objects.filter(Test_name='SR_test').values_list().get())
-
-
-            # list = BLKOUT.objects.all()
-            # writer.writerow(BLKOUT.objects.filter(Test_number='Test1').values().get())
-            # for item in list:
-            #     writer.writerow(BLKOUT.objects.filter(Test_number=item).values_list().get())
-
-
-
+            writer.writerow([''])
 
             AF_list = MADOUT.objects.all() # get a audio freq list from MADOUT
 
