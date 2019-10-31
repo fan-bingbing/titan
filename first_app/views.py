@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
-from first_app.models import CSEOUT, CSHOUT, ACSOUT, BLKOUT, SROUT
+from first_app.models import CSEOUT, CSHOUT, BLKOUT, SROUT, ACSOUT
 import time
 from . import forms
 import first_app.definition as df
@@ -137,10 +137,20 @@ def output(request):
 
             writer = csv.writer(response)
 
-            list = SROUT.objects.all()
-            writer.writerow(SROUT.objects.filter(CH_Freq_MHz=164.075).values().get())
-            for item in list:
-                writer.writerow(SROUT.objects.filter(CH_Freq_MHz=item).values_list().get())
+            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
+            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
+            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
+            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values().get())
+            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values_list().get())
+            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test2').values_list().get())
+            writer.writerow(SROUT.objects.filter(Test_name='SR_test').values().get())
+            writer.writerow(SROUT.objects.filter(Test_name='SR_test').values_list().get())
+
+
+            # list = BLKOUT.objects.all()
+            # writer.writerow(BLKOUT.objects.filter(Test_number='Test1').values().get())
+            # for item in list:
+            #     writer.writerow(BLKOUT.objects.filter(Test_number=item).values_list().get())
 
 
 
@@ -406,7 +416,8 @@ def acs(request):
 
             ACS_high = df.Rx_test_operation(freq=test_freq, delta=0.0125)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+            acs_list = ACSOUT.objects.get_or_create(Test_name='ACS_test1',
+                                        CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
                                         IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
                                         IN_Lev_dBuV=SMB2.Lev_RF(),
@@ -417,7 +428,8 @@ def acs(request):
 
             ACS_low = df.Rx_test_operation(freq=test_freq, delta=-0.0125)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            acs_list = ACSOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+            acs_list = ACSOUT.objects.get_or_create(Test_name='ACS_test2',
+                                        CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
                                         IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
                                         IN_Lev_dBuV=SMB2.Lev_RF(),
@@ -452,7 +464,8 @@ def sr(request):
 
             SR = df.Rx_test_operation(freq=test_freq, delta=-2*21.4, step=1.0)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            sr_list = SROUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+            sr_list = SROUT.objects.get_or_create(Test_name='SR_test',
+                                        CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
                                         IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
                                         IN_Lev_dBuV=SMB2.Lev_RF(),
@@ -489,7 +502,8 @@ def blk(request):
 
             BLK_high = df.Rx_test_operation(freq=test_freq, delta=1.0, UMD='OFF', step=1.0)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            blk_list = BLKOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+            blk_list = BLKOUT.objects.get_or_create(Test_name='BLK_test1',
+                                        CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
                                         IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
                                         IN_Lev_dBuV=SMB2.Lev_RF(),
@@ -500,7 +514,8 @@ def blk(request):
 
             BLK_low = df.Rx_test_operation(freq=test_freq, delta=-1.0, UMD='OFF', step=1.0)
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            blk_list = BLKOUT.objects.get_or_create(CH_Freq_MHz=test_freq,
+            blk_list = BLKOUT.objects.get_or_create(Test_name='BLK_test2',
+                                        CH_Freq_MHz=test_freq,
                                         CH_Lev_dBuV=SMB1.Lev_RF(),
                                         IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
                                         IN_Lev_dBuV=SMB2.Lev_RF(),

@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from first_app.models import FEP, RES, DEMOD, TXSIG, MADOUT, ACP, ACPOUT
-from first_app.models import CSE, CSEOUT, CSHOUT, RXSIG, ACSOUT, BLKOUT, SROUT
+from first_app.models import CSE, CSEOUT, CSHOUT, RXSIG, BLKOUT, ACSOUT, SROUT
 admin.site.register(FEP)
 admin.site.register(RES)
 admin.site.register(DEMOD)

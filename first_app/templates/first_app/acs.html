@@ -22,7 +22,7 @@
           <table class="table table-striped table-dark">
               <thead>
                   <tr>
-
+                      <th scope="col">Test_name</th>
                       <th scope="col">CH_Freq(MHz)</th>
                       <th scope="col">CH_Lev(dBuV)</th>
                       <th scope="col">IN_Freq(MHz)</th>
@@ -35,8 +35,9 @@
               <tbody>
                   {% for acs in acsouts %}
                   <tr>
+                      <td>{{ acs.Test_name }}</td>
                       <td>{{ acs.CH_Freq_MHz }}</td>
-                      <td>{{ acs.CH_Lev_dBuV}}</td>
+                      <td>{{ acs.CH_Lev_dBuV }}</td>
                       <td>{{ acs.IN_Freq_MHz }}</td>
                       <td>{{ acs.IN_Lev_dBuV }}</td>
                       <td>{{ acs.ACS_dB }}</td>

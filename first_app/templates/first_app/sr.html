@@ -22,7 +22,7 @@
           <table class="table table-striped table-dark">
               <thead>
                   <tr>
-
+                      <th scope="col">Test_name</th>
                       <th scope="col">CH_Freq(MHz)</th>
                       <th scope="col">CH_Lev(dBuV)</th>
                       <th scope="col">IN_Freq(MHz)</th>
@@ -35,8 +35,9 @@
               <tbody>
                   {% for sr in srouts %}
                   <tr>
+                      <td>{{ sr.Test_name }}</td>
                       <td>{{ sr.CH_Freq_MHz }}</td>
-                      <td>{{ sr.CH_Lev_dBuV}}</td>
+                      <td>{{ sr.CH_Lev_dBuV }}</td>
                       <td>{{ sr.IN_Freq_MHz }}</td>
                       <td>{{ sr.IN_Lev_dBuV }}</td>
                       <td>{{ sr.SR_dB }}</td>

@@ -93,10 +93,11 @@ class RXSIG(models.Model):
         return self.parameter
 
 class ACSOUT(models.Model):
+    Test_name = models.CharField(primary_key=True, max_length=200)
     CH_Freq_MHz = models.CharField(max_length=200)
-    CH_Lev_dBuV = models.CharField(max_length=200)
+    CH_Lev_dBuV = models.FloatField(max_length=200)
     IN_Freq_MHz = models.FloatField(max_length=200)
-    IN_Lev_dBuV = models.CharField(max_length=200)
+    IN_Lev_dBuV = models.FloatField(max_length=200)
     ACS_dB = models.FloatField(max_length=200)
     limit_dB = models.FloatField(max_length=200)
     TimeStamp = models.CharField(max_length=200)
@@ -105,10 +106,11 @@ class ACSOUT(models.Model):
         return self.CH_Freq_MHz
 
 class BLKOUT(models.Model):
+    Test_name = models.CharField(primary_key=True, max_length=200)
     CH_Freq_MHz = models.CharField(max_length=200)
-    CH_Lev_dBuV = models.CharField(max_length=200)
+    CH_Lev_dBuV = models.FloatField(max_length=200)
     IN_Freq_MHz = models.FloatField(max_length=200)
-    IN_Lev_dBuV = models.CharField(max_length=200)
+    IN_Lev_dBuV = models.FloatField(max_length=200)
     BLK_dB = models.FloatField(max_length=200)
     limit_dB = models.FloatField(max_length=200)
     TimeStamp = models.CharField(max_length=200)
@@ -117,10 +119,11 @@ class BLKOUT(models.Model):
         return self.CH_Freq_MHz
 
 class SROUT(models.Model):
-    CH_Freq_MHz = models.CharField(primary_key=True, max_length=200)
-    CH_Lev_dBuV = models.CharField(max_length=200)
+    Test_name = models.CharField(primary_key=True, max_length=200)
+    CH_Freq_MHz = models.CharField(max_length=200)
+    CH_Lev_dBuV = models.FloatField(max_length=200)
     IN_Freq_MHz = models.FloatField(max_length=200)
-    IN_Lev_dBuV = models.CharField(max_length=200)
+    IN_Lev_dBuV = models.FloatField(max_length=200)
     SR_dB = models.FloatField(max_length=200)
     limit_dB = models.FloatField(max_length=200)
     TimeStamp = models.CharField(max_length=200)
