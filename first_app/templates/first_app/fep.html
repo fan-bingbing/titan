@@ -23,41 +23,34 @@
           <table class="table table-striped table-dark">
               <thead>
                   <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Frequency Error(Hz)</th>
-                      <th scope="col">Frequency Error Limit(Hz)</th>
-                      <th scope="col">Frequency Error Margin(Hz)</th>
+                      <th scope="col">Test_name</th>
+                      <th scope="col">CH_Freq_MHz</th>
+                      <th scope="col">Freq_Error_MHz</th>
+                      <th scope="col">Fre_error_limit_Hz</th>
+                      <th scope="col">Power_dB</th>
+                      <th scope="col">Power_limit_dB</th>
+                      <th scope="col">Screenshot_file</th>
+                      <th scope="col">TimeStamp</th>
                   </tr>
               </thead>
               <tbody>
+                  {% for fep in fepouts %}
                   <tr>
-                      <th scope="row">1</th>
-                      <td>{{ F }}</td>
-                      <td>{{ F_limit }}</td>
-                      <td>{{ F_margin }}</td>
+                      <td>{{ fep.Test_name }}</td>
+                      <td>{{ fep.CH_Freq_MHz }}</td>
+                      <td>{{ fep.Freq_Error_MHz }}</td>
+                      <td>{{ fep.Fre_error_limit_Hz }}</td>
+                      <td>{{ fep.Power_dB }}</td>
+                      <td>{{ fep.Power_limit_dB }}</td>
+                      <td>{{ fep.Screenshot_file }}</td>
+                      <td>{{ fep.TimeStamp }}</td>
                   </tr>
+                  {% endfor %}
               </tbody>
           </table>
-          <table class="table table-striped table-dark">
-              <thead>
-                  <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Power(dBm)</th>
-                      <th scope="col">Power Limit(dBm)</th>
-                      <th scope="col">Power Margin(dB)</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <tr>
-                      <th scope="row">1</th>
-                      <td>{{ P }}</td>
-                      <td>{{ P_limit }}</td>
-                      <td>{{ P_margin }}</td>
-                  </tr>
-              </tbody>
-          </table>
-          <img src="{% static "result_images/fep/" %}{{Screenshot}}.png" alt="pic not found." class="img-thumbnail">
-
+          {% for fep in fepouts %}
+          <img src="{% static "result_images/fep/" %}{{fep.Screenshot_file}}" alt="pic not found." class="img-thumbnail">
+          {% endfor %}
       </div>
   </body>
 </html>

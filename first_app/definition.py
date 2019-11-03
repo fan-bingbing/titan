@@ -681,19 +681,19 @@ except BaseException:
     pass
 
 try:
-    SMB1 = SigGen(equip_list[0].resadd)
+    SMB1 = SigGen(equip_list[3].resadd)
 except BaseException:
     print("SMB1 is not on.")
     pass
 
 try:
-    SMB2 = SigGen(equip_list[1].resadd)
+    SMB2 = SigGen(equip_list[4].resadd)
 except BaseException:
     print("SMB2 is not on.")
     pass
 
 try:
-    EUT = Radio('com10', baudrate=115200)
+    EUT = Radio('com10', baudrate=9600)
 except BaseException:
     print("Specified com port does not exsit.")
     pass

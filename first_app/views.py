@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
-from first_app.models import CSEOUT, CSHOUT, BLKOUT, SROUT, ACSOUT
+from first_app.models import FEPOUT, CSEOUT, CSHOUT, BLKOUT, SROUT, ACSOUT
 import time
 from . import forms
 import first_app.definition as df
@@ -136,7 +136,9 @@ def output(request):
             response['Content-Disposition'] = f'attachment; filename={filename}'
 
             writer = csv.writer(response)
-
+            writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
+            writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values_list().get())
+            writer.writerow([''])
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
@@ -192,7 +194,7 @@ def csh(request):
     if request.method == 'POST': # 'post' will not work here
         form = forms.INPUTCS(request.POST)
         if form.is_valid():
-            CSHOUT.objects.all().delete()
+            FEPOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
@@ -221,6 +223,7 @@ def fep(request):
         form = forms.INPUTFREQ(request.POST)
         if form.is_valid():
             #do something
+            FEPOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
 
@@ -237,13 +240,27 @@ def fep(request):
             FSV.write("DISP:TRAC:MODE VIEW")
             EUT.Radio_Off()
             fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
-            fep_result.update({'form':form})#joint form and result dictionary
+            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+            fep_list = FEPOUT.objects.get_or_create(Test_name='FEP_test1',
+                                        CH_Freq_MHz=test_freq,
+                                        Freq_Error_MHz=round(fep_result['F'],5),
+                                        Fre_error_limit_Hz=fep_result['F_limit'],
+                                        Power_dB=round(fep_result['P'],5),
+                                        Power_limit_dB=fep_result['P_limit'],
+                                        Screenshot_file='FEP_'+str(test_freq)+'_MHz.png',
+                                        TimeStamp=Timestamp
+                                        )[0]
 
             print(f"Frequency error:{fep_result['F']}Hz")
             print(f"Carrier power:{fep_result['P']}dBm")
             # FSV.close()
+            fep_list = FEPOUT.objects.all()
+            fep_dict = {
+                    'fepouts': fep_list
+                }
 
-            return render(request, 'first_app/fep.html', context=fep_result)
+            fep_dict.update({'form':form})#joint form and result dictionary
+            return render(request, 'first_app/fep.html', context=fep_dict)
 
     return render(request, 'first_app/fep.html', {'form':form})# always return input form
 
@@ -346,7 +363,8 @@ def mad(request):
                 FSV.write(f"INIT:CONT ON")
                 print(f"Deviation is {Reading_array1[i]}kHz")
                 Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-                mad_list = MADOUT.objects.get_or_create(audiofreq_Hz=AF_list1[i],
+                mad_list = MADOUT.objects.get_or_create(Test_name='MAD_test'+str(i+1),
+                                            audiofreq_Hz=AF_list1[i],
                                             audiolev_mV=Level_AF,
                                             pluspeak_kHz=Reading_array1[i][0],
                                             minuspeak_kHz=Reading_array1[i][1],
@@ -373,7 +391,8 @@ def mad(request):
                 FSV.write(f"INIT:CONT ON")
                 print(f"Deviation is {Reading_array2[i]}kHz")
                 Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-                mad_list = MADOUT.objects.get_or_create(audiofreq_Hz=AF_list2[i],
+                mad_list = MADOUT.objects.get_or_create(Test_name='MAD_test'+str(i+14),
+                                            audiofreq_Hz=AF_list2[i],
                                             audiolev_mV=Level_AF,
                                             pluspeak_kHz=Reading_array2[i][0],
                                             minuspeak_kHz=Reading_array2[i][1],
@@ -520,7 +539,7 @@ def blk(request):
         EUT.Radio_Off()
         SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
         SMB2.write("OUTP1 OFF")
-        print("Adjacent Channel Selectivity test completed.")
+        print("Blocking test completed.")
         blk_list = BLKOUT.objects.all()
         blk_dict = {
                 'blkouts': blk_list
