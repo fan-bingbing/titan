@@ -299,7 +299,7 @@ class SpecAn(object):
                 }
 
 
-    def get_CSE_result(self, freq, sub_range):
+    def get_CSE_result(self, freq, sub_range, test_num):
         self.SP.write("CALC:MARK1:MAX")
         self.SP.write("CALC:MARK2:MAX")
         self.SP.write("CALC:MARK2:MAX:NEXT")
@@ -308,15 +308,18 @@ class SpecAn(object):
 
         Frequency2 = float(self.SP.query("CALC:MARK2:X?"))/1e6
         Level2 = float(self.SP.query("CALC:MARK2:Y?"))
-
+        Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(datetime.datetime.now())
         if sub_range <= 3:
-            cse_list = CSEOUT.objects.get_or_create(SubRange=sub_range,
+            cse_list = CSEOUT.objects.get_or_create(Test_name=test_num,
+                                                    CH_Freq_MHz=freq,
+                                                    SubRange=sub_range,
                                                     CSE1_Frequency_MHz=round(Frequency1,5),
                                                     CSE1_Level_dBm=round(Level1,5),
                                                     CSE2_Frequency_MHz=round(Frequency2,5),
                                                     CSE2_Level_dBm=round(Level2,5),
                                                     limit_dBm= -30,
-                                                    Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png'
+                                                    Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png',
+                                                    TimeStamp=Timestamp
                                                     )[0]
             indication = (self.SP.query("*OPC?")).replace("1","Completed.")
             print(f"CSE Test {indication}")
@@ -625,7 +628,7 @@ def Tx_set_standard_test_condition():
     print(f"Audio level has been set to {Level_AF} mV")
     return Level_AF
 
-def CSE_operation(freq, sub_range, limit_line, cutoff, filter='NA'):
+def CSE_operation(freq, sub_range, limit_line, cutoff, test_num, filter='NA'):
     FSV.CSE_Setup(sub_range=sub_range, limit_line=limit_line, cutoff=cutoff, filter=filter)
     FSV.query('*OPC?')
     EUT.Set_Freq(freq=freq+0.0125)
@@ -634,7 +637,7 @@ def CSE_operation(freq, sub_range, limit_line, cutoff, filter='NA'):
     time.sleep(5)
     FSV.write("DISP:TRAC:MODE VIEW")
     EUT.Radio_Off()
-    FSV.get_CSE_result(freq=freq, sub_range=sub_range)
+    FSV.get_CSE_result(freq=freq, sub_range=sub_range, test_num=test_num)
     FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
 
 def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5):

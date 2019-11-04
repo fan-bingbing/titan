@@ -39,6 +39,8 @@ class FEPOUT(models.Model):
         return self.Test_name
 
 class CSEOUT(models.Model):
+    Test_name = models.CharField(primary_key=True, max_length=200)
+    CH_Freq_MHz = models.CharField(max_length=200)
     SubRange = models.CharField(max_length=200)
     CSE1_Frequency_MHz = models.FloatField(max_length=200)
     CSE1_Level_dBm = models.FloatField(max_length=200)
@@ -46,8 +48,9 @@ class CSEOUT(models.Model):
     CSE2_Level_dBm = models.FloatField(max_length=200)
     limit_dBm = models.FloatField(max_length=200)
     Screenshot_file = models.CharField(max_length=200)
+    TimeStamp = models.CharField(max_length=200, default='')
     def __str__(self):
-        return self.SubRange
+        return self.Test_name
 
 class CSHOUT(models.Model):
     SubRange = models.CharField(max_length=200)
