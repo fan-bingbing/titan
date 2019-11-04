@@ -304,6 +304,7 @@ def acp(request):
                                                     CarrierPower_dBm=round(float(ACP_LIST[0]),5),
                                                     ACPminus_dBc=round(float(ACP_LIST[1]),5),
                                                     ACPplus_dBc=round(float(ACP_LIST[2]),5),
+                                                    limit_dBm=-16.0,
                                                     Screenshot_file='ACP_'+str(test_freq)+'_MHz.png',
                                                     TimeStamp=Timestamp,
                                                     )[0]

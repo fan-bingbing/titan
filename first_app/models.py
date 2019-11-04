@@ -68,6 +68,7 @@ class ACPOUT(models.Model):
     CarrierPower_dBm = models.FloatField(max_length=200)
     ACPminus_dBc = models.FloatField(max_length=200)
     ACPplus_dBc = models.FloatField(max_length=200)
+    limit_dBm = models.FloatField(max_length=200)
     Screenshot_file = models.CharField(max_length=200)
     TimeStamp = models.CharField(max_length=200)
 
