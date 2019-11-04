@@ -13,7 +13,7 @@
               <h1>Frequency Error and Power Test Page</h1>
               <div class="container">
                 <form method="post" class="input_form">
-                  {{form.as_p}}
+                  {{form.as_table}}
                   {% csrf_token %}
                   <input type="submit" class="btn btn-primary" value="Submit">
                 </form>
@@ -25,11 +25,10 @@
                   <tr>
                       <th scope="col">Test_name</th>
                       <th scope="col">CH_Freq_MHz</th>
-                      <th scope="col">Freq_Error_MHz</th>
+                      <th scope="col">Freq_Error_Hz</th>
                       <th scope="col">Fre_error_limit_Hz</th>
-                      <th scope="col">Power_dBm</th>
-                      <th scope="col">Power_limit_dBm</th>
-                      <th scope="col">Screenshot_file</th>
+                      <th scope="col">Power_diff_dB</th>
+                      <th scope="col">Power_diff_limit_dB</th>
                       <th scope="col">TimeStamp</th>
                   </tr>
               </thead>
@@ -38,11 +37,10 @@
                   <tr>
                       <td>{{ fep.Test_name }}</td>
                       <td>{{ fep.CH_Freq_MHz }}</td>
-                      <td>{{ fep.Freq_Error_MHz }}</td>
+                      <td>{{ fep.Freq_Error_Hz }}</td>
                       <td>{{ fep.Fre_error_limit_Hz }}</td>
-                      <td>{{ fep.Power_dBm }}</td>
-                      <td>{{ fep.Power_limit_dBm }}</td>
-                      <td>{{ fep.Screenshot_file }}</td>
+                      <td>{{ fep.Power_diff_dB }}</td>
+                      <td>{{ fep.Power_diff_limit_dB }}</td>
                       <td>{{ fep.TimeStamp }}</td>
                   </tr>
                   {% endfor %}

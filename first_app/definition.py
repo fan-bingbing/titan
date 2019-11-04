@@ -294,7 +294,7 @@ class SpecAn(object):
         indication = (self.SP.query("*OPC?")).replace("1","Completed.")
         self.screenshot('FEP_'+str(freq)+'_MHz', folder)
         return {'F':Frequency_error, 'F_limit':1500, 'F_margin':1500 - abs(Frequency_error),
-                'P':Level, 'P_limit':36.98, 'P_margin':abs(Level - 36.98),
+                'P':Level, 'P_limit':1.5, 'P_margin':abs(Level - 36.98),
                 'Screenshot': 'FEP_'+str(freq)+'_MHz'
                 }
 

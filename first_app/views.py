@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
 from first_app.models import FEPOUT, CSEOUT, CSHOUT, BLKOUT, SROUT, ACSOUT
-import time
+import time, math
 from . import forms
 import first_app.definition as df
 from first_app.forms import INPUTRES
@@ -233,14 +233,15 @@ def csh(request):
 
 
 def fep(request):
-    form = forms.INPUTFREQ()
+    form = forms.INPUTFEP()
     if request.method == 'POST': # 'post' will not work here
-        form = forms.INPUTFREQ(request.POST)
+        form = forms.INPUTFEP(request.POST)
         if form.is_valid():
             #do something
             FEPOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
+            test_power = form.cleaned_data['test_power_in_Watt']
 
             print("input frequency: " + str(test_freq))
             FSV.FEP_Setup(freq=test_freq)
@@ -258,10 +259,10 @@ def fep(request):
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
             fep_list = FEPOUT.objects.get_or_create(Test_name='FEP_test1',
                                         CH_Freq_MHz=test_freq,
-                                        Freq_Error_MHz=round(fep_result['F'],5),
+                                        Freq_Error_Hz=round(fep_result['F'],5),
                                         Fre_error_limit_Hz=fep_result['F_limit'],
-                                        Power_dBm=round(fep_result['P'],5),
-                                        Power_limit_dBm=fep_result['P_limit'],
+                                        Power_diff_dB=round(abs(fep_result['P']-10*math.log10(test_power*1000)),5),
+                                        Power_diff_limit_dB=fep_result['P_limit'],
                                         Screenshot_file='FEP_'+str(test_freq)+'_MHz.png',
                                         TimeStamp=Timestamp
                                         )[0]
