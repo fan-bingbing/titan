@@ -142,10 +142,12 @@ def output(request):
             writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values().get())
             writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values_list().get())
             writer.writerow([''])
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSL_test1').values().get())
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSL_test1').values_list().get())
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSL_test2').values_list().get())
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSL_test3').values_list().get())
+            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values().get())
+            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values_list().get())
+            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test2').values_list().get())
+            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test3').values_list().get())
+            writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test4').values_list().get())
+            writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test5').values_list().get())
             writer.writerow([''])
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
@@ -183,9 +185,12 @@ def cs(request):
             cutoff_freq = form.cleaned_data['cutoff_frequency_in_MHz']
 
             print("input frequency: " + str(test_freq))
-            df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1, cutoff=cutoff_freq, test_num='CSL_test1')
-            df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1, cutoff=cutoff_freq, test_num='CSL_test2')
-            df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1, cutoff=cutoff_freq, test_num='CSL_test3')
+            df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1,
+                             cutoff=cutoff_freq, test_num='CSE_test1')
+            df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1,
+                             cutoff=cutoff_freq, test_num='CSE_test2')
+            df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1,
+                             cutoff=cutoff_freq, test_num='CSE_test3')
             csl_list = CSEOUT.objects.all()
             csl_dict = {
                     'cslouts': csl_list
@@ -202,7 +207,7 @@ def csh(request):
     if request.method == 'POST': # 'post' will not work here
         form = forms.INPUTCS(request.POST)
         if form.is_valid():
-            FEPOUT.objects.all().delete()
+            CSHOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
             test_freq = form.cleaned_data['test_frequency_in_MHz']
@@ -210,8 +215,10 @@ def csh(request):
             filter = form.cleaned_data['high_pass_filter']
 
             print("input frequency: " + str(test_freq))
-            df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1, cutoff=cutoff_freq, filter=filter)
-            df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1, cutoff=cutoff_freq, filter=filter)
+            df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1, cutoff=cutoff_freq,
+                             filter=filter, test_num='CSE_test4')
+            df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1, cutoff=cutoff_freq,
+                             filter=filter, test_num='CSE_test5')
 
             csh_list = CSHOUT.objects.all()
             csh_dict = {

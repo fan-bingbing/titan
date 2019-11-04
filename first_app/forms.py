@@ -5,6 +5,9 @@ equip_list = RES.objects.all()
 class INPUTFREQ(forms.Form):
     test_frequency_in_MHz = forms.FloatField()
 
+class INPUTPOW(forms.Form):
+    test_power_in_Watt = forms.FloatField()
+
 class OUTPUTFILE(forms.Form):
     output_filename = forms.CharField()
 

@@ -324,13 +324,16 @@ class SpecAn(object):
             indication = (self.SP.query("*OPC?")).replace("1","Completed.")
             print(f"CSE Test {indication}")
         else:
-            cse_list = CSHOUT.objects.get_or_create(SubRange=sub_range,
+            cse_list = CSHOUT.objects.get_or_create(Test_name=test_num,
+                                                    CH_Freq_MHz=freq,
+                                                    SubRange=sub_range,
                                                     CSE1_Frequency_MHz=round(Frequency1,5),
                                                     CSE1_Level_dBm=round(Level1,5),
                                                     CSE2_Frequency_MHz=round(Frequency2,5),
                                                     CSE2_Level_dBm=round(Level2,5),
                                                     limit_dBm= -30,
-                                                    Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png'
+                                                    Screenshot_file='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz.png',
+                                                    TimeStamp=Timestamp
                                                     )[0]
             indication = (self.SP.query("*OPC?")).replace("1","Completed.")
             print(f"CSE Test {indication}")

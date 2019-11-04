@@ -23,25 +23,27 @@
           <table class="table table-striped table-dark">
               <thead>
                   <tr>
+                      <th scope="col">Test_name</th>
+                      <th scope="col">CH_Freq_MHz</th>
                       <th scope="col">SubRange</th>
                       <th scope="col">CSE1_Frequency(MHz)</th>
                       <th scope="col">CSE1_Level(dBm)</th>
                       <th scope="col">CSE2_Frequency(MHz)</th>
                       <th scope="col">CSE2_Level(dBm)</th>
                       <th scope="col">Limit(dBm)</th>
-                      <th scope="col">Screenshot_file(png)</th>
                   </tr>
               </thead>
               <tbody>
                   {% for csh in cshouts %}
                   <tr>
+                    <td>{{ csh.Test_name }}</td>
+                    <td>{{ csh.CH_Freq_MHz }}</td>
                     <td>{{ csh.SubRange }}</td>
                     <td>{{ csh.CSE1_Frequency_MHz }}</td>
                     <td>{{ csh.CSE1_Level_dBm }}</td>
                     <td>{{ csh.CSE2_Frequency_MHz }}</td>
                     <td>{{ csh.CSE2_Level_dBm }}</td>
                     <td>{{ csh.limit_dBm }}</td>
-                    <td>{{ csh.Screenshot_file }}</td>
                   </tr>
                   {% endfor %}
               </tbody>
