@@ -248,8 +248,8 @@ def fep(request):
                                         CH_Freq_MHz=test_freq,
                                         Freq_Error_MHz=round(fep_result['F'],5),
                                         Fre_error_limit_Hz=fep_result['F_limit'],
-                                        Power_dB=round(fep_result['P'],5),
-                                        Power_limit_dB=fep_result['P_limit'],
+                                        Power_dBm=round(fep_result['P'],5),
+                                        Power_limit_dBm=fep_result['P_limit'],
                                         Screenshot_file='FEP_'+str(test_freq)+'_MHz.png',
                                         TimeStamp=Timestamp
                                         )[0]

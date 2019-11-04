@@ -30,8 +30,8 @@ class FEPOUT(models.Model):
     CH_Freq_MHz = models.CharField(max_length=200)
     Freq_Error_MHz = models.FloatField(max_length=200)
     Fre_error_limit_Hz = models.FloatField(max_length=200)
-    Power_dB = models.FloatField(max_length=200)
-    Power_limit_dB = models.FloatField(max_length=200)
+    Power_dBm = models.FloatField(max_length=200)
+    Power_limit_dBm = models.FloatField(max_length=200)
     Screenshot_file = models.CharField(max_length=200)
     TimeStamp = models.CharField(max_length=200)
 
@@ -63,7 +63,7 @@ class CSHOUT(models.Model):
         return self.SubRange
 
 class ACPOUT(models.Model):
-    Test_name = models.CharField(primary_key=True, max_length=200,default='')
+    Test_name = models.CharField(primary_key=True, max_length=200)
     Frequency_MHz = models.CharField(max_length=200)
     CarrierPower_dBm = models.FloatField(max_length=200)
     ACPminus_dBc = models.FloatField(max_length=200)
