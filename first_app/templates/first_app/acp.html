@@ -22,6 +22,7 @@
           <table class="table table-striped table-dark">
               <thead>
                   <tr>
+                      <th scope="col">Test_name</th>
                       <th scope="col">Frequency(MHz)</th>
                       <th scope="col">Carrier Power(dBm)</th>
                       <th scope="col">ACP-(dBc)</th>
@@ -33,6 +34,7 @@
               <tbody>
                   {% for acp in acpouts %}
                   <tr>
+                      <td>{{ acp.Test_name }}</td>
                       <td>{{ acp.Frequency_MHz }}</td>
                       <td>{{ acp.CarrierPower_dBm }}</td>
                       <td>{{ acp.ACPminus_dBc }}</td>

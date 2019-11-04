@@ -139,6 +139,9 @@ def output(request):
             writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
             writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values_list().get())
             writer.writerow([''])
+            writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values().get())
+            writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values_list().get())
+            writer.writerow([''])
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
             writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
@@ -296,7 +299,8 @@ def acp(request):
             ACP = FSV.query("CALC:MARK:FUNC:POW:RES? ACP")
             ACP_LIST = df.re.findall(r'-?\d+\.\d+', ACP) # -? with or without negative sign, \d+ one or more digit
             Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            acp_list = ACPOUT.objects.get_or_create(Frequency_MHz=test_freq,
+            acp_list = ACPOUT.objects.get_or_create(Test_name='ACP_test1',
+                                                    Frequency_MHz=test_freq,
                                                     CarrierPower_dBm=round(float(ACP_LIST[0]),5),
                                                     ACPminus_dBc=round(float(ACP_LIST[1]),5),
                                                     ACPplus_dBc=round(float(ACP_LIST[2]),5),

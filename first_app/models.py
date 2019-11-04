@@ -63,6 +63,7 @@ class CSHOUT(models.Model):
         return self.SubRange
 
 class ACPOUT(models.Model):
+    Test_name = models.CharField(primary_key=True, max_length=200,default='')
     Frequency_MHz = models.CharField(max_length=200)
     CarrierPower_dBm = models.FloatField(max_length=200)
     ACPminus_dBc = models.FloatField(max_length=200)
@@ -72,7 +73,7 @@ class ACPOUT(models.Model):
 
 
     def __str__(self):
-        return self.Frequency_MHz
+        return self.Test_name
 
 
 class RES(models.Model):
@@ -159,4 +160,4 @@ class MADOUT(models.Model):
     TimeStamp = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.audiofreq_Hz 
+        return self.audiofreq_Hz
