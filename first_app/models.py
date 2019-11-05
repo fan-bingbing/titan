@@ -157,6 +157,7 @@ class SROUT(models.Model):
 
 class MADOUT(models.Model):
     Test_name = models.CharField(primary_key=True, max_length=200)
+    CH_Freq_MHz = models.CharField(max_length=200, default='')
     audiofreq_Hz = models.CharField(max_length=200)
     audiolev_mV = models.FloatField(max_length=200)
     pluspeak_kHz = models.FloatField(max_length=200)
@@ -167,4 +168,4 @@ class MADOUT(models.Model):
     TimeStamp = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.audiofreq_Hz
+        return self.Test_name

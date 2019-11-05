@@ -136,6 +136,7 @@ def output(request):
             response['Content-Disposition'] = f'attachment; filename={filename}'
 
             writer = csv.writer(response)
+
             feplist = FEPOUT.objects.all()
             writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
             for item in feplist:
@@ -155,27 +156,13 @@ def output(request):
             cshlist = CSHOUT.objects.all()
             for item in cshlist:
                 writer.writerow(CSHOUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
 
-
-            # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
-            # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
-            # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
-            # writer.writerow([''])
-            # writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values().get())
-            # writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values_list().get())
-            # writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test2').values_list().get())
-            # writer.writerow([''])
-            # writer.writerow(SROUT.objects.filter(Test_name='SR_test').values().get())
-            # writer.writerow(SROUT.objects.filter(Test_name='SR_test').values_list().get())
-            # writer.writerow([''])
-            #
-            # AF_list = MADOUT.objects.all() # get a audio freq list from MADOUT
-            #
-            # # write MADOUT fields in first row
-            # writer.writerow(MADOUT.objects.filter(audiofreq_Hz=100).values().get())
-            # # write whole table
-            # for item in AF_list:
-            #     writer.writerow(MADOUT.objects.filter(audiofreq_Hz=item).values_list().get())
+            madlist = MADOUT.objects.all()
+            writer.writerow(MADOUT.objects.filter(Test_name='MAD_test1.1').values().get())
+            for item in madlist:
+                writer.writerow(MADOUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
 
             return response
 
@@ -315,10 +302,7 @@ def acp(request):
 
             test_freq_string = form.cleaned_data['test_frequency_in_MHz']
 
-            print(test_freq_string)
-
             test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
-            print(test_freq_list)
 
             for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
                 test_freq = float(test_freq)
@@ -382,79 +366,88 @@ def mad(request):
             #do something
             MADOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
-            print("input frequency: " + str(test_freq))
-            SMB1.Tx_Setup()
-            SMB1.query('*OPC?')
-            FSV.DeMod_Setup(freq=test_freq)
-            FSV.query('*OPC?')
-            EUT.Set_Freq(freq=test_freq+0.0125)
-            EUT.Set_Pow("high")
-            EUT.Radio_On()
-            time.sleep(2)
-            FSV.write(f"INIT:CONT OFF")
-            Level_AF = df.Tx_set_standard_test_condition()
-            # below code block is to vary audio frequency to complete the test
-            Level_AF = 10*Level_AF # bring audio level up 20dB in one step( 10times valtage)
-            SMB1.write(f"LFO:VOLT {Level_AF}mV")
-            print(f"Audio level has been set to {Level_AF} mV")
 
-            for i in range(0,13):
-                print(f"At Audio frequency:{AF_list1[i]}")
-                SMB1.write(f"LFO:FREQ {AF_list1[i]}Hz")
-                SMB1.query('*OPC?')
-                time.sleep(1)
-                FSV.write(f"INIT:CONT OFF")
-                time.sleep(1)
-                Reading_array1[i][0]= round((float(FSV.query("CALC:MARK:FUNC:ADEM:FM? PPE"))/1000),5)
-                Reading_array1[i][1]= round((float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MPE"))/1000),5)
-                Reading_array1[i][2]= round((float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000),5)
-                FSV.query("*OPC?")
-                FSV.write(f"INIT:CONT ON")
-                print(f"Deviation is {Reading_array1[i]}kHz")
-                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-                mad_list = MADOUT.objects.get_or_create(Test_name='MAD_test'+str(i+1),
-                                            audiofreq_Hz=AF_list1[i],
-                                            audiolev_mV=Level_AF,
-                                            pluspeak_kHz=Reading_array1[i][0],
-                                            minuspeak_kHz=Reading_array1[i][1],
-                                            avepeak_kHz=Reading_array1[i][2],
-                                            limit_kHz=2.5,
-                                            margin_kHz=round(2.5-abs(Reading_array1[i][2]),5),
-                                            TimeStamp=Timestamp
-                                            )[0]
-            Level_AF = Level_AF/10
-            SMB1.write(f"LFO:VOLT {Level_AF}mV")
-            print(f"Audio level has been set to {Level_AF} mV")
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
 
-            for i in range(0,11):
-                print(f"At Audio frequency:{AF_list2[i]}")
-                SMB1.write(f"LFO:FREQ {AF_list2[i]}Hz")
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                SMB1.Tx_Setup()
                 SMB1.query('*OPC?')
-                time.sleep(1)
+                FSV.DeMod_Setup(freq=test_freq)
+                FSV.query('*OPC?')
+                EUT.Set_Freq(freq=test_freq+0.0125)
+                EUT.Set_Pow("high")
+                EUT.Radio_On()
+                time.sleep(2)
                 FSV.write(f"INIT:CONT OFF")
-                time.sleep(1)
-                Reading_array2[i][0]= round(float(FSV.query("CALC:MARK:FUNC:ADEM:FM? PPE"))/1000,5)
-                Reading_array2[i][1]= round(float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MPE"))/1000,5)
-                Reading_array2[i][2]= round(float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000,5)
-                FSV.query("*OPC?")
-                FSV.write(f"INIT:CONT ON")
-                print(f"Deviation is {Reading_array2[i]}kHz")
-                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-                mad_list = MADOUT.objects.get_or_create(Test_name='MAD_test'+str(i+14),
-                                            audiofreq_Hz=AF_list2[i],
-                                            audiolev_mV=Level_AF,
-                                            pluspeak_kHz=Reading_array2[i][0],
-                                            minuspeak_kHz=Reading_array2[i][1],
-                                            avepeak_kHz=Reading_array2[i][2],
-                                            limit_kHz=2.5,
-                                            margin_kHz=round(2.5-abs(Reading_array2[i][2]),5),
-                                            TimeStamp=Timestamp
-                                            )[0]
-            EUT.Radio_Off()
-            SMB1.write("LFO OFF")# turn off audio output at the end of the test
-            indication = (FSV.query("*OPC?")).replace("1","Completed.")
-            print(f"Maximum Deviation test {indication}")
+                Level_AF = df.Tx_set_standard_test_condition()
+                # below code block is to vary audio frequency to complete the test
+                Level_AF = 10*Level_AF # bring audio level up 20dB in one step( 10times valtage)
+                SMB1.write(f"LFO:VOLT {Level_AF}mV")
+                print(f"Audio level has been set to {Level_AF} mV")
+
+                for j in range(0,13):
+                    print(f"At Audio frequency:{AF_list1[j]}")
+                    SMB1.write(f"LFO:FREQ {AF_list1[j]}Hz")
+                    SMB1.query('*OPC?')
+                    time.sleep(1)
+                    FSV.write(f"INIT:CONT OFF")
+                    time.sleep(1)
+                    Reading_array1[j][0]= round((float(FSV.query("CALC:MARK:FUNC:ADEM:FM? PPE"))/1000),5)
+                    Reading_array1[j][1]= round((float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MPE"))/1000),5)
+                    Reading_array1[j][2]= round((float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000),5)
+                    FSV.query("*OPC?")
+                    FSV.write(f"INIT:CONT ON")
+                    print(f"Deviation is {Reading_array1[j]}kHz")
+                    Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                    mad_list = MADOUT.objects.get_or_create(Test_name='MAD_test'+str(i+1)+'.'+str(j+1),
+                                                CH_Freq_MHz=test_freq,
+                                                audiofreq_Hz=AF_list1[j],
+                                                audiolev_mV=Level_AF,
+                                                pluspeak_kHz=Reading_array1[j][0],
+                                                minuspeak_kHz=Reading_array1[j][1],
+                                                avepeak_kHz=Reading_array1[j][2],
+                                                limit_kHz=2.5,
+                                                margin_kHz=round(2.5-abs(Reading_array1[j][2]),5),
+                                                TimeStamp=Timestamp
+                                                )[0]
+                Level_AF = Level_AF/10
+                SMB1.write(f"LFO:VOLT {Level_AF}mV")
+                print(f"Audio level has been set to {Level_AF} mV")
+
+                for j in range(0,11):
+                    print(f"At Audio frequency:{AF_list2[j]}")
+                    SMB1.write(f"LFO:FREQ {AF_list2[j]}Hz")
+                    SMB1.query('*OPC?')
+                    time.sleep(1)
+                    FSV.write(f"INIT:CONT OFF")
+                    time.sleep(1)
+                    Reading_array2[j][0]= round(float(FSV.query("CALC:MARK:FUNC:ADEM:FM? PPE"))/1000,5)
+                    Reading_array2[j][1]= round(float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MPE"))/1000,5)
+                    Reading_array2[j][2]= round(float(FSV.query("CALC:MARK:FUNC:ADEM:FM? MIDD"))/1000,5)
+                    FSV.query("*OPC?")
+                    FSV.write(f"INIT:CONT ON")
+                    print(f"Deviation is {Reading_array2[j]}kHz")
+                    Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                    MADOUT.objects.get_or_create(Test_name='MAD_test'+str(i+1)+'.'+str(j+14),
+                                                CH_Freq_MHz=test_freq,
+                                                audiofreq_Hz=AF_list2[j],
+                                                audiolev_mV=Level_AF,
+                                                pluspeak_kHz=Reading_array2[j][0],
+                                                minuspeak_kHz=Reading_array2[j][1],
+                                                avepeak_kHz=Reading_array2[j][2],
+                                                limit_kHz=2.5,
+                                                margin_kHz=round(2.5-abs(Reading_array2[j][2]),5),
+                                                TimeStamp=Timestamp
+                                                )[0]
+                EUT.Radio_Off()
+                SMB1.write("LFO OFF")# turn off audio output at the end of the test
+                indication = (FSV.query("*OPC?")).replace("1","Completed.")
+                print(f"Maximum Deviation test {indication}")
+
+
+
             mad_list = MADOUT.objects.all()
             mad_dict = {
                     'madouts': mad_list
