@@ -136,38 +136,44 @@ def output(request):
             response['Content-Disposition'] = f'attachment; filename={filename}'
 
             writer = csv.writer(response)
+            feplist = FEPOUT.objects.all()
             writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
-            writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values_list().get())
-            writer.writerow([''])
-            writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values().get())
-            writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values_list().get())
-            writer.writerow([''])
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values().get())
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values_list().get())
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test2').values_list().get())
-            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test3').values_list().get())
-            writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test4').values_list().get())
-            writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test5').values_list().get())
-            writer.writerow([''])
-            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
-            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
-            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
-            writer.writerow([''])
-            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values().get())
-            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values_list().get())
-            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test2').values_list().get())
-            writer.writerow([''])
-            writer.writerow(SROUT.objects.filter(Test_name='SR_test').values().get())
-            writer.writerow(SROUT.objects.filter(Test_name='SR_test').values_list().get())
-            writer.writerow([''])
+            for item in feplist:
+                writer.writerow(FEPOUT.objects.filter(Test_name=item).values_list().get())
 
-            AF_list = MADOUT.objects.all() # get a audio freq list from MADOUT
 
-            # write MADOUT fields in first row
-            writer.writerow(MADOUT.objects.filter(audiofreq_Hz=100).values().get())
-            # write whole table
-            for item in AF_list:
-                writer.writerow(MADOUT.objects.filter(audiofreq_Hz=item).values_list().get())
+            # writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
+            # writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values_list().get())
+            # writer.writerow([''])
+            # writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values().get())
+            # writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values_list().get())
+            # writer.writerow([''])
+            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values().get())
+            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values_list().get())
+            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test2').values_list().get())
+            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test3').values_list().get())
+            # writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test4').values_list().get())
+            # writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test5').values_list().get())
+            # writer.writerow([''])
+            # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
+            # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
+            # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
+            # writer.writerow([''])
+            # writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values().get())
+            # writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1').values_list().get())
+            # writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test2').values_list().get())
+            # writer.writerow([''])
+            # writer.writerow(SROUT.objects.filter(Test_name='SR_test').values().get())
+            # writer.writerow(SROUT.objects.filter(Test_name='SR_test').values_list().get())
+            # writer.writerow([''])
+            #
+            # AF_list = MADOUT.objects.all() # get a audio freq list from MADOUT
+            #
+            # # write MADOUT fields in first row
+            # writer.writerow(MADOUT.objects.filter(audiofreq_Hz=100).values().get())
+            # # write whole table
+            # for item in AF_list:
+            #     writer.writerow(MADOUT.objects.filter(audiofreq_Hz=item).values_list().get())
 
             return response
 
@@ -240,36 +246,46 @@ def fep(request):
             #do something
             FEPOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
             test_power = form.cleaned_data['test_power_in_Watt']
+            print(test_freq_string)
 
-            print("input frequency: " + str(test_freq))
-            FSV.FEP_Setup(freq=test_freq)
-            FSV.query('*OPC?')
-            EUT.Set_Freq(freq=test_freq+0.0125)
-            # adding 0.0125MHz makes absolutely no sense but fixed problem...
-            EUT.Set_Pow("high")
-            EUT.Radio_On()
-            time.sleep(2)
-            FSV.write("DISP:TRAC:MODE MAXH")
-            time.sleep(3)
-            FSV.write("DISP:TRAC:MODE VIEW")
-            EUT.Radio_Off()
-            fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            fep_list = FEPOUT.objects.get_or_create(Test_name='FEP_test1',
-                                        CH_Freq_MHz=test_freq,
-                                        Freq_Error_Hz=round(fep_result['F'],5),
-                                        Fre_error_limit_Hz=fep_result['F_limit'],
-                                        Power_diff_dB=round(abs(fep_result['P']-10*math.log10(test_power*1000)),5),
-                                        Power_diff_limit_dB=fep_result['P_limit'],
-                                        Screenshot_file='FEP_'+str(test_freq)+'_MHz.png',
-                                        TimeStamp=Timestamp
-                                        )[0]
+            # print("input frequency: " + str(test_freq))
 
-            print(f"Frequency error:{fep_result['F']}Hz")
-            print(f"Carrier power:{fep_result['P']}dBm")
-            # FSV.close()
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            print(test_freq_list)
+
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                FSV.FEP_Setup(freq=test_freq)
+                FSV.query('*OPC?')
+                EUT.Set_Freq(freq=test_freq+0.0125)
+                # adding 0.0125MHz makes absolutely no sense but fixed problem...
+                EUT.Set_Pow("high")
+                EUT.Radio_On()
+                time.sleep(2)
+                FSV.write("DISP:TRAC:MODE MAXH")
+                time.sleep(3)
+                FSV.write("DISP:TRAC:MODE VIEW")
+                EUT.Radio_Off()
+
+                fep_result = FSV.get_FEP_result(freq=test_freq, folder='fep')
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                FEPOUT.objects.get_or_create(Test_name='FEP_test'+str(i+1),
+                                            CH_Freq_MHz=test_freq,
+                                            Freq_Error_Hz=round(fep_result['F'],5),
+                                            Fre_error_limit_Hz=fep_result['F_limit'],
+                                            Power_diff_dB=round(abs(fep_result['P']-10*math.log10(test_power*1000)),5),
+                                            Power_diff_limit_dB=fep_result['P_limit'],
+                                            Screenshot_file='FEP_'+str(test_freq)+'_MHz.png',
+                                            TimeStamp=Timestamp
+                                            )[0]
+
+                print(f"Frequency error:{fep_result['F']}Hz")
+                print(f"Carrier power:{fep_result['P']}dBm")
+                # FSV.close()
+
+
             fep_list = FEPOUT.objects.all()
             fep_dict = {
                     'fepouts': fep_list

@@ -3,11 +3,11 @@ from first_app.models import RES
 equip_list = RES.objects.all()
 
 class INPUTFEP(forms.Form):
-    test_frequency_in_MHz = forms.FloatField()
+    test_frequency_in_MHz = forms.CharField()
     test_power_in_Watt = forms.FloatField()
 
-
-
+class INPUTFREQ(forms.Form):
+    test_frequency_in_MHz = forms.FloatField()
 
 class OUTPUTFILE(forms.Form):
     output_filename = forms.CharField()
