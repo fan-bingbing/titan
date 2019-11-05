@@ -140,21 +140,23 @@ def output(request):
             writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
             for item in feplist:
                 writer.writerow(FEPOUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
+
+            acplist = ACPOUT.objects.all()
+            writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values().get())
+            for item in acplist:
+                writer.writerow(ACPOUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
+
+            cselist = CSEOUT.objects.all()
+            writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1.1').values().get())
+            for item in cselist:
+                writer.writerow(CSEOUT.objects.filter(Test_name=item).values_list().get())
+            cshlist = CSHOUT.objects.all()
+            for item in cshlist:
+                writer.writerow(CSHOUT.objects.filter(Test_name=item).values_list().get())
 
 
-            # writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values().get())
-            # writer.writerow(FEPOUT.objects.filter(Test_name='FEP_test1').values_list().get())
-            # writer.writerow([''])
-            # writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values().get())
-            # writer.writerow(ACPOUT.objects.filter(Test_name='ACP_test1').values_list().get())
-            # writer.writerow([''])
-            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values().get())
-            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1').values_list().get())
-            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test2').values_list().get())
-            # writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test3').values_list().get())
-            # writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test4').values_list().get())
-            # writer.writerow(CSHOUT.objects.filter(Test_name='CSE_test5').values_list().get())
-            # writer.writerow([''])
             # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values().get())
             # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1').values_list().get())
             # writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test2').values_list().get())
@@ -187,16 +189,21 @@ def cs(request):
             CSEOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
             cutoff_freq = form.cleaned_data['cutoff_frequency_in_MHz']
 
-            print("input frequency: " + str(test_freq))
-            df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1,
-                             cutoff=cutoff_freq, test_num='CSE_test1')
-            df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1,
-                             cutoff=cutoff_freq, test_num='CSE_test2')
-            df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1,
-                             cutoff=cutoff_freq, test_num='CSE_test3')
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                df.CSE_operation(freq=test_freq, sub_range=1, limit_line=1,
+                                 cutoff=cutoff_freq, test_num='CSE_test'+str(i+1)+'.1')
+                df.CSE_operation(freq=test_freq, sub_range=2, limit_line=1,
+                                 cutoff=cutoff_freq, test_num='CSE_test'+str(i+1)+'.2')
+                df.CSE_operation(freq=test_freq, sub_range=3, limit_line=1,
+                                 cutoff=cutoff_freq, test_num='CSE_test'+str(i+1)+'.3')
+
+
             csl_list = CSEOUT.objects.all()
             csl_dict = {
                     'cslouts': csl_list
@@ -216,15 +223,19 @@ def csh(request):
             CSHOUT.objects.all().delete()
             #do something
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
             cutoff_freq = form.cleaned_data['cutoff_frequency_in_MHz']
             filter = form.cleaned_data['high_pass_filter']
 
-            print("input frequency: " + str(test_freq))
-            df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1, cutoff=cutoff_freq,
-                             filter=filter, test_num='CSE_test4')
-            df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1, cutoff=cutoff_freq,
-                             filter=filter, test_num='CSE_test5')
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                df.CSE_operation(freq=test_freq, sub_range=4, limit_line=1, cutoff=cutoff_freq,
+                                 filter=filter, test_num='CSE_test'+str(i+1)+'.4')
+                df.CSE_operation(freq=test_freq, sub_range=5, limit_line=1, cutoff=cutoff_freq,
+                                 filter=filter, test_num='CSE_test'+str(i+1)+'.5')
+
 
             csh_list = CSHOUT.objects.all()
             csh_dict = {
@@ -248,12 +259,8 @@ def fep(request):
             print("VALIDATION SUCCESS!")
             test_freq_string = form.cleaned_data['test_frequency_in_MHz']
             test_power = form.cleaned_data['test_power_in_Watt']
-            print(test_freq_string)
-
-            # print("input frequency: " + str(test_freq))
 
             test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
-            print(test_freq_list)
 
             for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
                 test_freq = float(test_freq)
@@ -305,41 +312,50 @@ def acp(request):
             ACPOUT.objects.all().delete()
             # do something
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
-            print("input frequency: " + str(test_freq))
-            SMB1.Tx_Setup()
-            SMB1.query('*OPC?')
-            FSV.DeMod_Setup(freq=test_freq)
-            FSV.query('*OPC?')
-            EUT.Set_Freq(freq=test_freq+0.0125)
-            EUT.Set_Pow("high")
-            EUT.Radio_On()
-            time.sleep(2)
-            FSV.write(f"INIT:CONT OFF")
 
-            df.Tx_set_standard_test_condition()
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
 
-            FSV.ACP_Setup(freq=test_freq)
-            time.sleep(8)
-            FSV.write(f"DISP:TRAC:MODE VIEW")
-            EUT.Radio_Off()
-            SMB1.write("LFO OFF")# turn off audio output at the end of the test
-            FSV.screenshot(file_name='ACP_'+str(test_freq)+'_MHz', folder='acp')
-            ACP = FSV.query("CALC:MARK:FUNC:POW:RES? ACP")
-            ACP_LIST = df.re.findall(r'-?\d+\.\d+', ACP) # -? with or without negative sign, \d+ one or more digit
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            acp_list = ACPOUT.objects.get_or_create(Test_name='ACP_test1',
-                                                    Frequency_MHz=test_freq,
-                                                    CarrierPower_dBm=round(float(ACP_LIST[0]),5),
-                                                    ACPminus_dBc=round(float(ACP_LIST[1]),5),
-                                                    ACPplus_dBc=round(float(ACP_LIST[2]),5),
-                                                    limit_dBm=-16.0,
-                                                    Screenshot_file='ACP_'+str(test_freq)+'_MHz.png',
-                                                    TimeStamp=Timestamp,
-                                                    )[0]
-            indication = (FSV.query("*OPC?")).replace("1","Completed.")
-            print(f"Adjacent Channel Test {indication}")
-            print(ACP_LIST)
+            print(test_freq_string)
+
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            print(test_freq_list)
+
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                SMB1.Tx_Setup()
+                SMB1.query('*OPC?')
+                FSV.DeMod_Setup(freq=test_freq)
+                FSV.query('*OPC?')
+                EUT.Set_Freq(freq=test_freq+0.0125)
+                EUT.Set_Pow("high")
+                EUT.Radio_On()
+                time.sleep(2)
+                FSV.write(f"INIT:CONT OFF")
+
+                df.Tx_set_standard_test_condition()
+
+                FSV.ACP_Setup(freq=test_freq)
+                time.sleep(8)
+                FSV.write(f"DISP:TRAC:MODE VIEW")
+                EUT.Radio_Off()
+                SMB1.write("LFO OFF")# turn off audio output at the end of the test
+                FSV.screenshot(file_name='ACP_'+str(test_freq)+'_MHz', folder='acp')
+                ACP = FSV.query("CALC:MARK:FUNC:POW:RES? ACP")
+                ACP_LIST = df.re.findall(r'-?\d+\.\d+', ACP) # -? with or without negative sign, \d+ one or more digit
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                acp_list = ACPOUT.objects.get_or_create(Test_name='ACP_test'+str(i+1),
+                                                        Frequency_MHz=test_freq,
+                                                        CarrierPower_dBm=round(float(ACP_LIST[0]),5),
+                                                        ACPminus_dBc=round(float(ACP_LIST[1]),5),
+                                                        ACPplus_dBc=round(float(ACP_LIST[2]),5),
+                                                        limit_dBm=-16.0,
+                                                        Screenshot_file='ACP_'+str(test_freq)+'_MHz.png',
+                                                        TimeStamp=Timestamp,
+                                                        )[0]
+                indication = (FSV.query("*OPC?")).replace("1","Completed.")
+                print(f"Adjacent Channel Test {indication}")
+                print(ACP_LIST)
+
             acp_list = ACPOUT.objects.all()
             acp_dict = {
                     'acpouts': acp_list

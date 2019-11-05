@@ -7,7 +7,7 @@ class INPUTFEP(forms.Form):
     test_power_in_Watt = forms.FloatField()
 
 class INPUTFREQ(forms.Form):
-    test_frequency_in_MHz = forms.FloatField()
+    test_frequency_in_MHz = forms.CharField()
 
 class OUTPUTFILE(forms.Form):
     output_filename = forms.CharField()
@@ -23,11 +23,9 @@ class INPUTINDEX(forms.Form):
 class INPUTCS(forms.Form):
     filter_choices=[('NA', 'NA'),('NHP-700', 'NHP-700+'),('BHP-300', 'BHP-300')]
     cutoff_choices=[(700, '700MHz'),(270, '270MHz')]
-    test_frequency_in_MHz = forms.FloatField()
+    test_frequency_in_MHz = forms.CharField()
     cutoff_frequency_in_MHz = forms.ChoiceField(choices=cutoff_choices, widget=forms.Select)
     high_pass_filter = forms.ChoiceField(choices=filter_choices, widget=forms.Select)
-
-
 
 class INPUTRES(forms.ModelForm):
     class Meta():
