@@ -149,6 +149,24 @@ def output(request):
                 writer.writerow(ACPOUT.objects.filter(Test_name=item).values_list().get())
             writer.writerow([''])
 
+            acslist = ACSOUT.objects.all()
+            writer.writerow(ACSOUT.objects.filter(Test_name='ACS_test1.1').values().get())
+            for item in acslist:
+                writer.writerow(ACSOUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
+
+            srlist = SROUT.objects.all()
+            writer.writerow(SROUT.objects.filter(Test_name='SR_test1').values().get())
+            for item in srlist:
+                writer.writerow(SROUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
+
+            blklist = BLKOUT.objects.all()
+            writer.writerow(BLKOUT.objects.filter(Test_name='BLK_test1.1').values().get())
+            for item in blklist:
+                writer.writerow(BLKOUT.objects.filter(Test_name=item).values_list().get())
+            writer.writerow([''])
+
             cselist = CSEOUT.objects.all()
             writer.writerow(CSEOUT.objects.filter(Test_name='CSE_test1.1').values().get())
             for item in cselist:
@@ -467,36 +485,40 @@ def acs(request):
             #do something
             ACSOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
-            print("input frequency: " + str(test_freq))
 
-            ACS_high = df.Rx_test_operation(freq=test_freq, delta=0.0125)
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            acs_list = ACSOUT.objects.get_or_create(Test_name='ACS_test1',
-                                        CH_Freq_MHz=test_freq,
-                                        CH_Lev_dBuV=SMB1.Lev_RF(),
-                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
-                                        IN_Lev_dBuV=SMB2.Lev_RF(),
-                                        ACS_dB=ACS_high,
-                                        limit_dB=60.0,
-                                        TimeStamp=Timestamp
-                                        )[0]
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                ACS_high = df.Rx_test_operation(freq=test_freq, delta=0.0125)
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                acs_list = ACSOUT.objects.get_or_create(Test_name='ACS_test'+str(i+1)+'.1',
+                                            CH_Freq_MHz=test_freq,
+                                            CH_Lev_dBuV=SMB1.Lev_RF(),
+                                            IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                            IN_Lev_dBuV=SMB2.Lev_RF(),
+                                            ACS_dB=ACS_high,
+                                            limit_dB=60.0,
+                                            TimeStamp=Timestamp
+                                            )[0]
 
-            ACS_low = df.Rx_test_operation(freq=test_freq, delta=-0.0125)
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            acs_list = ACSOUT.objects.get_or_create(Test_name='ACS_test2',
-                                        CH_Freq_MHz=test_freq,
-                                        CH_Lev_dBuV=SMB1.Lev_RF(),
-                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
-                                        IN_Lev_dBuV=SMB2.Lev_RF(),
-                                        ACS_dB=ACS_low,
-                                        limit_dB=60.0,
-                                        TimeStamp=Timestamp
-                                        )[0]
-        EUT.Radio_Off()
-        SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
-        SMB2.write("OUTP1 OFF")
-        print("Adjacent Channel Selectivity test completed.")
+                ACS_low = df.Rx_test_operation(freq=test_freq, delta=-0.0125)
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                acs_list = ACSOUT.objects.get_or_create(Test_name='ACS_test'+str(i+1)+'.2',
+                                            CH_Freq_MHz=test_freq,
+                                            CH_Lev_dBuV=SMB1.Lev_RF(),
+                                            IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                            IN_Lev_dBuV=SMB2.Lev_RF(),
+                                            ACS_dB=ACS_low,
+                                            limit_dB=60.0,
+                                            TimeStamp=Timestamp
+                                            )[0]
+            EUT.Radio_Off()
+            SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+            SMB2.write("OUTP1 OFF")
+            print("Adjacent Channel Selectivity test completed.")
+
+
         acs_list = ACSOUT.objects.all()
         acs_dict = {
                 'acsouts': acs_list
@@ -515,25 +537,28 @@ def sr(request):
             #do something
             SROUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
-            print("input frequency: " + str(test_freq))
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                SR = df.Rx_test_operation(freq=test_freq, delta=-2*21.4, step=1.0)
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                sr_list = SROUT.objects.get_or_create(Test_name='SR_test'+str(i+1),
+                                            CH_Freq_MHz=test_freq,
+                                            CH_Lev_dBuV=SMB1.Lev_RF(),
+                                            IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                            IN_Lev_dBuV=SMB2.Lev_RF(),
+                                            SR_dB=SR,
+                                            limit_dB=70.0,
+                                            TimeStamp=Timestamp
+                                            )[0]
 
-            SR = df.Rx_test_operation(freq=test_freq, delta=-2*21.4, step=1.0)
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            sr_list = SROUT.objects.get_or_create(Test_name='SR_test',
-                                        CH_Freq_MHz=test_freq,
-                                        CH_Lev_dBuV=SMB1.Lev_RF(),
-                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
-                                        IN_Lev_dBuV=SMB2.Lev_RF(),
-                                        SR_dB=SR,
-                                        limit_dB=70.0,
-                                        TimeStamp=Timestamp
-                                        )[0]
+            EUT.Radio_Off()
+            SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+            SMB2.write("OUTP1 OFF")
+            print("Spurious Response test completed.")
 
-        EUT.Radio_Off()
-        SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
-        SMB2.write("OUTP1 OFF")
-        print("Spurious Response test completed.")
+
         sr_list = SROUT.objects.all()
         sr_dict = {
                 'srouts': sr_list
@@ -553,36 +578,39 @@ def blk(request):
             #do something
             BLKOUT.objects.all().delete()
             print("VALIDATION SUCCESS!")
-            test_freq = form.cleaned_data['test_frequency_in_MHz']
-            print("input frequency: " + str(test_freq))
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                BLK_high = df.Rx_test_operation(freq=test_freq, delta=1.0, UMD='OFF', step=1.0)
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                blk_list = BLKOUT.objects.get_or_create(Test_name='BLK_test'+str(i+1)+'.1',
+                                            CH_Freq_MHz=test_freq,
+                                            CH_Lev_dBuV=SMB1.Lev_RF(),
+                                            IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                            IN_Lev_dBuV=SMB2.Lev_RF(),
+                                            BLK_dB=BLK_high,
+                                            limit_dB=80.0,
+                                            TimeStamp=Timestamp
+                                            )[0]
 
-            BLK_high = df.Rx_test_operation(freq=test_freq, delta=1.0, UMD='OFF', step=1.0)
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            blk_list = BLKOUT.objects.get_or_create(Test_name='BLK_test1',
-                                        CH_Freq_MHz=test_freq,
-                                        CH_Lev_dBuV=SMB1.Lev_RF(),
-                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
-                                        IN_Lev_dBuV=SMB2.Lev_RF(),
-                                        BLK_dB=BLK_high,
-                                        limit_dB=80.0,
-                                        TimeStamp=Timestamp
-                                        )[0]
+                BLK_low = df.Rx_test_operation(freq=test_freq, delta=-1.0, UMD='OFF', step=1.0)
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                blk_list = BLKOUT.objects.get_or_create(Test_name='BLK_test'+str(i+1)+'.2',
+                                            CH_Freq_MHz=test_freq,
+                                            CH_Lev_dBuV=SMB1.Lev_RF(),
+                                            IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
+                                            IN_Lev_dBuV=SMB2.Lev_RF(),
+                                            BLK_dB=BLK_low,
+                                            limit_dB=80.0,
+                                            TimeStamp=Timestamp
+                                            )[0]
+            EUT.Radio_Off()
+            SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+            SMB2.write("OUTP1 OFF")
+            print("Blocking test completed.")
 
-            BLK_low = df.Rx_test_operation(freq=test_freq, delta=-1.0, UMD='OFF', step=1.0)
-            Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
-            blk_list = BLKOUT.objects.get_or_create(Test_name='BLK_test2',
-                                        CH_Freq_MHz=test_freq,
-                                        CH_Lev_dBuV=SMB1.Lev_RF(),
-                                        IN_Freq_MHz=float(SMB2.Freq_RF())/1e6,
-                                        IN_Lev_dBuV=SMB2.Lev_RF(),
-                                        BLK_dB=BLK_low,
-                                        limit_dB=80.0,
-                                        TimeStamp=Timestamp
-                                        )[0]
-        EUT.Radio_Off()
-        SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
-        SMB2.write("OUTP1 OFF")
-        print("Blocking test completed.")
+
         blk_list = BLKOUT.objects.all()
         blk_dict = {
                 'blkouts': blk_list

@@ -655,7 +655,7 @@ def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5):
 
     Level_RF = float(SMB2.Lev_RF())
     for i in range(0,100):
-        if SINAD > 14.0:
+        if SINAD > 14.0 and Level_RF < 130.0:
             Level_RF = Level_RF + step
             SMB2.write(f":POW {Level_RF}dBuV")
             SMB2.query('*OPC?')
@@ -681,19 +681,19 @@ def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5):
 equip_list = RES.objects.all()
 
 try:
-    FSV = SpecAn(equip_list[2].resadd)
+    FSV = SpecAn(equip_list[3].resadd)
 except BaseException:
     print("FSV is not on.")
     pass
 
 try:
-    SMB1 = SigGen(equip_list[3].resadd)
+    SMB1 = SigGen(equip_list[4].resadd)
 except BaseException:
     print("SMB1 is not on.")
     pass
 
 try:
-    SMB2 = SigGen(equip_list[4].resadd)
+    SMB2 = SigGen(equip_list[0].resadd)
 except BaseException:
     print("SMB2 is not on.")
     pass
