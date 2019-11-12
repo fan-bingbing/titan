@@ -2,10 +2,10 @@ import pyvisa
 import sys
 import os
 import math
-import openpyxl
+# import openpyxl
 # import pandas as pd
-from openpyxl import Workbook
-from openpyxl import load_workbook
+# from openpyxl import Workbook
+# from openpyxl import load_workbook
 import time
 import serial
 import re
@@ -18,8 +18,8 @@ getcontext().prec = 10 # set 10 decimal values precision
 # Decimal module import from decimal make sure float numbers addition yeilds correct value
 import sounddevice as sd
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.fftpack import fft
+# import matplotlib.pyplot as plt
+# from scipy.fftpack import fft
 import subprocess
 from os import system
 from subprocess import Popen, PIPE
