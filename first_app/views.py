@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT
+from first_app.models import FEP, RES, DEMOD, TXSIG, ACPOUT, MADOUT, SENOUT
 from first_app.models import FEPOUT, CSEOUT, CSHOUT, BLKOUT, SROUT, ACSOUT
 import time, math
 from . import forms
@@ -475,6 +475,45 @@ def mad(request):
             return render(request, 'first_app/mad.html', context=mad_dict)
 
     return render(request, 'first_app/mad.html', {'form':form})# always return input form
+
+def sen(request):
+    form = forms.INPUTFREQ()
+    if request.method == 'POST': # 'post' will not work here
+        form = forms.INPUTFREQ(request.POST)
+        if form.is_valid():
+            #do something
+            SENOUT.objects.all().delete()
+            print("VALIDATION SUCCESS!")
+
+            test_freq_string = form.cleaned_data['test_frequency_in_MHz']
+            test_freq_list = df.re.findall(r'-?\d+\.\d+', test_freq_string)
+            for i, test_freq in enumerate(test_freq_list):# python way of counting in for loop
+                test_freq = float(test_freq)
+                SEN = df.Rx_test_operation(freq=test_freq, delta=0.0125, SEN='ON')
+                Timestamp ='{:%d-%b-%Y %H:%M:%S}'.format(df.datetime.datetime.now())
+                SENOUT.objects.get_or_create(Test_name='SEN_test'+str(i+1),
+                                            CH_Freq_MHz=test_freq,
+                                            CH_Lev_dBuV=SMB1.Lev_RF(),
+                                            Lev_RxPort_dBm=SEN[0],
+                                            SINAD_dB=SEN[1],
+                                            limit_dB=-120,
+                                            TimeStamp=Timestamp
+                                            )[0]
+
+            EUT.Radio_Off()
+            SMB1.write("OUTP1 OFF")# turn off audio output at the end of the test
+            # SMB2.write("OUTP1 OFF")
+            print("Sensitivity test completed.")
+
+
+        sen_list = SENOUT.objects.all()
+        sen_dict = {
+                'senouts': sen_list
+            }
+
+        sen_dict.update({'form':form})#joint form and result dictionary
+        return render(request, 'first_app/sen.html', context=sen_dict)
+    return render(request, 'first_app/sen.html', {'form':form})# always return input form
 
 def acs(request):
 

@@ -10,6 +10,7 @@ urlpatterns = [
                 path('acp/', views.acp, name='acp'),
                 path('cs/', views.cs, name='cs'),
                 path('csh/', views.csh, name='csh'),
+                path('sen/', views.sen, name='sen'),
                 path('acs/', views.acs, name='acs'),
                 path('blk/', views.blk, name='blk'),
                 path('sr/', views.sr, name='sr'),

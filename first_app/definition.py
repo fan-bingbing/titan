@@ -643,33 +643,55 @@ def CSE_operation(freq, sub_range, limit_line, cutoff, test_num, filter='NA'):
     FSV.get_CSE_result(freq=freq, sub_range=sub_range, test_num=test_num)
     FSV.screenshot(file_name='CSE0'+str(sub_range)+'_'+str(freq)+'_MHz', folder='cs')
 
-def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5):
-    EUT.Set_Freq(freq=freq+0.0125)
-    SMB1.Wanted_Signal(freq=freq)
-    SMB1.query('*OPC?')
-    SMB2.Unwanted_Signal(freq=freq+delta)
-    SMB2.write(f":FM:STAT {UMD}")# turn off modulation
-    SMB2.query('*OPC?')
+def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5, SEN='OFF'):
+    if SEN == 'ON':
+        EUT.Set_Freq(freq=freq+0.0125)
+        SMB1.Wanted_Signal(freq=freq)
+        SMB1.query('*OPC?')
+        SINAD = SC.get_sample(ccitt=True) # get initial SINAD from SC
+        Level_RF = float(SMB1.Lev_RF())
 
-    SINAD = SC.get_sample(ccitt=True) # get initial SINAD from SC
+        for i in range(0,100):
+            if SINAD > 14.0:
+                Level_RF = Level_RF - step
+                SMB1.write(f":POW {Level_RF}dBuV")
+                SMB1.query('*OPC?')
+                SINAD = 0
+                for i in range(0, average):
+                    SINAD += SC.get_sample(ccitt=True)
+                SINAD = SINAD / float(average) # take average of certain values
+                print(SINAD)
+            else:
+                break
 
-    Level_RF = float(SMB2.Lev_RF())
-    for i in range(0,100):
-        if SINAD > 14.0 and Level_RF < 130.0:
-            Level_RF = Level_RF + step
-            SMB2.write(f":POW {Level_RF}dBuV")
-            SMB2.query('*OPC?')
+        Result = [float(SMB1.Lev_RF())-33.5-107.0, SINAD]
+    else:
+        EUT.Set_Freq(freq=freq+0.0125)
+        SMB1.Wanted_Signal(freq=freq)
+        SMB1.query('*OPC?')
+        SMB2.Unwanted_Signal(freq=freq+delta)
+        SMB2.write(f":FM:STAT {UMD}")# turn off modulation
+        SMB2.query('*OPC?')
 
-            SINAD = 0
-            for i in range(0, average):
-                SINAD += SC.get_sample(ccitt=True)
-            SINAD = SINAD / float(average) # take average of certain values
-            print(SINAD)
+        SINAD = SC.get_sample(ccitt=True) # get initial SINAD from SC
 
-        else:
-            break
+        Level_RF = float(SMB2.Lev_RF())
+        for i in range(0,100):
+            if SINAD > 14.0 and Level_RF < 130.0:
+                Level_RF = Level_RF + step
+                SMB2.write(f":POW {Level_RF}dBuV")
+                SMB2.query('*OPC?')
 
-    Result = Level_RF - float(SMB1.Lev_RF())
+                SINAD = 0
+                for i in range(0, average):
+                    SINAD += SC.get_sample(ccitt=True)
+                SINAD = SINAD / float(average) # take average of certain values
+                print(SINAD)
+
+            else:
+                break
+
+        Result = Level_RF - float(SMB1.Lev_RF())
     return Result
 
 
@@ -681,13 +703,13 @@ def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5):
 equip_list = RES.objects.all()
 
 try:
-    FSV = SpecAn(equip_list[3].resadd)
+    FSV = SpecAn(equip_list[2].resadd)
 except BaseException:
     print("FSV is not on.")
     pass
 
 try:
-    SMB1 = SigGen(equip_list[4].resadd)
+    SMB1 = SigGen(equip_list[3].resadd)
 except BaseException:
     print("SMB1 is not on.")
     pass

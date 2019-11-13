@@ -115,6 +115,18 @@ class RXSIG(models.Model):
     def __str__(self):
         return self.parameter
 
+class SENOUT(models.Model):
+    Test_name = models.CharField(primary_key=True, max_length=200)
+    CH_Freq_MHz = models.CharField(max_length=200)
+    CH_Lev_dBuV = models.FloatField(max_length=200)
+    Lev_RxPort_dBm = models.FloatField(max_length=200)
+    SINAD_dB = models.FloatField(max_length=200)
+    limit_dB = models.FloatField(max_length=200)
+    TimeStamp = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.Test_name
+
 class ACSOUT(models.Model):
     Test_name = models.CharField(primary_key=True, max_length=200)
     CH_Freq_MHz = models.CharField(max_length=200)

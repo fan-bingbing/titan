@@ -1,7 +1,7 @@
 import sounddevice as sd
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.fftpack import fft
+# import matplotlib.pyplot as plt
+# from scipy.fftpack import fft
 
 
 class SoundCard(object):
