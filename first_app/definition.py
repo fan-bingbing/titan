@@ -30,8 +30,8 @@ class SoundCard(object):
         self.gain = 1
         self.duration = 0.1 # sample record duration
         self.sample_rate = samplerate
-        self.device = ('Microphone (Sound Blaster Play!, MME',
-                       'Speakers (Sound Blaster Play! 3, MME')
+        self.device = (2,2)
+        # self.device = ('Sound Blaster Play! 3: USB Audio (hw:1,0)',)
         sd.query_devices(self.device[0])
         sd.default.device = self.device
         sd.default.channels = 1
@@ -257,10 +257,10 @@ class SpecAn(object):
 
         file_data = self.SP.query_binary_values(f"MMEM:DATA? \'c:\\temp\\Dev_Screenshot.png\'", datatype='s',)[0] # query binary data and save
         # new_file = open(f"c:\\Temp\\{file_name}.png", "wb")
-        new_file = open(f"c:\\Users\\afan\\Documents\\titan\\static\\result_images\\{folder}\\{file_name}.png", "wb")# open a new file as "binary/write" on PC
+        new_file = open(f"/home/aaronfan/titan/static/result_images/{folder}/{file_name}.png", "wb")# open a new file as "binary/write" on PC
         new_file.write(file_data) # copy data to the file on PC
         new_file.close()
-        print(f"Screenshot saved to PC c:\\Users\\afan\\Documents\\titan\\static\\result_images\\{folder}\\{file_name}.png\n")
+        print(f"Screenshot saved to /home/aaronfan/titan/static/result_images/{folder}/{file_name}.png\n")
 
     def FEP_Setup(self, freq):
         fep_list = FEP.objects.all()
@@ -700,28 +700,28 @@ def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5, SEN='OFF'):
 
 
 
-equip_list = RES.objects.all()
+# equip_list = RES.objects.all()
 
 try:
-    FSV = SpecAn(equip_list[2].resadd)
+    FSV = SpecAn('TCPIP0::10.0.22.30::inst0::INSTR')
 except BaseException:
     print("FSV is not on.")
     pass
 
 try:
-    SMB1 = SigGen(equip_list[3].resadd)
+    SMB1 = SigGen('TCPIP0::10.0.22.84::inst0::INSTR')
 except BaseException:
     print("SMB1 is not on.")
     pass
 
 try:
-    SMB2 = SigGen(equip_list[0].resadd)
+    SMB2 = SigGen('TCPIP0::10.0.22.38::inst0::INSTR')
 except BaseException:
     print("SMB2 is not on.")
     pass
 
 try:
-    EUT = Radio('com10', baudrate=9600)
+    EUT = Radio('/dev/ttyUSB0', baudrate=9600)
 except BaseException:
     print("Specified com port does not exsit.")
     pass

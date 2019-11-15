@@ -9,8 +9,7 @@ class SoundCard(object):
         self.gain = 1
         self.duration = 0.1 # sample record duration
         self.sample_rate = 44100
-        self.device = ('Microphone (Sound Blaster Play!, MME',
-                       'Speakers (Sound Blaster Play! 3, MME')
+        self.device = (2,2)
         sd.query_devices(self.device[0])
         sd.default.device = self.device
         sd.default.channels = 1

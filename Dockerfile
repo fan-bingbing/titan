@@ -22,11 +22,14 @@ RUN conda update --all
 
 # prepare environment
 
+
+RUN pip install pyvisa-py
+RUN pip install pyusb
 RUN pip install Django==2.2.4
 RUN pip install pyvisa==1.10.0
 RUN pip install sounddevice
 RUN pip install pyserial
-RUN pip install libportaudio2
+RUN apt-get install libportaudio2
 RUN pip install numpy
 
 RUN conda list
