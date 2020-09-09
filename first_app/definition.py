@@ -703,19 +703,19 @@ def Rx_test_operation(freq, delta, average=5, UMD='ON', step=0.5, SEN='OFF'):
 equip_list = RES.objects.all()
 
 try:
-    FSV = SpecAn(equip_list[2].resadd)
+    FSV = SpecAn(equip_list[1].resadd)
 except BaseException:
     print("FSV is not on.")
     pass
 
 try:
-    SMB1 = SigGen(equip_list[3].resadd)
+    SMB1 = SigGen(equip_list[0].resadd)
 except BaseException:
     print("SMB1 is not on.")
     pass
 
 try:
-    SMB2 = SigGen(equip_list[0].resadd)
+    SMB2 = SigGen(equip_list[6].resadd)
 except BaseException:
     print("SMB2 is not on.")
     pass
